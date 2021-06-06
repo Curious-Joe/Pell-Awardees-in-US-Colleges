@@ -1,9 +1,30 @@
+# ********************************************
+# DATA SOURCING AND CLEANING FOR PELL PROJECT ----
+# Author: Arafath Hossain
+# Date: 06-06-2021
+# Description: 
+# The US Department of Education stores data on the Pell recipients. 
+# The data stored are in excel format in one file per year style with no fixed pattern or format style. 
+# This script will serve three purposes: 
+# 1. Collect the data from the website,
+# 2. Process the data to standardize their format,
+# 3. Merge different files to create one single source of data for futher use. 
+# ********************************************
+
+# 0.0 PROJECT SET UP ----
+
+# 0.1 Directory ----
 setwd("C:/Users/ahfah/Desktop/Data Science Projects/Dash App/pell_students_dash_app/data")
 
+# 0.1 Loading Libraries ----
 library(readxl)
 library(dplyr)
 library(httr)
 
+
+# 1.0 DATA SOURCING ----
+
+# 1.1 Data Sources ----
 # url_1213 = "https://www2.ed.gov/finaid/prof/resources/data/pell-inst-12-13.xls"
 # url_1112 = "https://www2.ed.gov/finaid/prof/resources/data/pell-inst-11-12.xls"
 # url_1011 = "https://www2.ed.gov/finaid/prof/resources/data/pell-inst-11-12.xls"
@@ -15,6 +36,7 @@ url_1516 = "https://www2.ed.gov/finaid/prof/resources/data/2015-16distofpellawds
 url_1617 = "https://www2.ed.gov/finaid/prof/resources/data/pellinst1617.xlsx"
 url_1718 = "https://www2.ed.gov/finaid/prof/resources/data/pellinst1718.xlsx"
 
+# 1.2 Collecting Data ----
 GET(url_1314, write_disk(pell_inst_13_14 <- tempfile(fileext = ".xls")))
 year_1314 = read_excel(pell_inst_13_14, col_names = T, skip = 4) %>%
   mutate(Year = "2013-14")
@@ -36,7 +58,8 @@ year_1718 <- read_excel(pell_inst_17_18, col_names = T, skip = 4) %>%
   mutate(Year = "2017-18")
 
 
-# rename function ----
+# 2.0 DATA PREPARATION ----
+# 2.1 Function for Data Processing ----
 rename_cols <- function(dataset, newnames){
   oldNames <- names(dataset)
   
@@ -69,7 +92,7 @@ newnames <- c(
   "Year"
 )
 
-# creating final combined data ----
+# 2.2 Data Process, Aggregating, and Storing ----
 combo <- rename_cols(year_1314, newnames) %>% 
   rbind(rename_cols(year_1415, newnames)) %>% 
   rbind(rename_cols(year_1516, newnames))%>% 
