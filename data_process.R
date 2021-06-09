@@ -18,11 +18,37 @@ setwd("C:/Users/ahfah/Desktop/Data Science Projects/Dash App/pell_students_dash_
 
 # 0.1 Loading Libraries ----
 library(readxl)
-library(dplyr)
+library(rvest)
+library(tidyverse)
 library(httr)
 
 
 # 1.0 DATA SOURCING ----
+
+# 1.0 Web Scraping
+url <- "https://www2.ed.gov/finaid/prof/resources/data/pell-institution.html"
+downloadString <- "https://www2.ed.gov/finaid/prof/resources/data/"
+
+htmlOutput <- read_html(url)
+
+# collect years
+years <- htmlOutput %>% 
+  html_nodes(".smallindent") %>%
+  html_text() %>%
+  substr(1, 7)
+
+# collects download link
+reportLinks <- htmlOutput %>% 
+  html_nodes(".smallindent > a") %>%
+  html_attr('href') %>%
+  unique()
+
+# year and report match
+yearlyReports <- tibble(
+  years = years,
+  report_link = paste0(downloadString, reportLinks)
+)
+
 
 # 1.1 Data Sources ----
 # url_1213 = "https://www2.ed.gov/finaid/prof/resources/data/pell-inst-12-13.xls"
