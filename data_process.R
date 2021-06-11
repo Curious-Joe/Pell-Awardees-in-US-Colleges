@@ -14,18 +14,19 @@
 # 0.0 PROJECT SET UP ----
 
 # 0.1 Directory ----
-setwd("C:/Users/ahfah/Desktop/Data Science Projects/Dash App/pell_students_dash_app/data")
+setwd("C:/Users/ahfah/Desktop/Data Science Projects/Dash App/pell_students_dash_app")
 
 # 0.1 Loading Libraries ----
 library(readxl)
 library(rvest)
 library(tidyverse)
 library(httr)
+library(janitor)
 
 
 # 1.0 DATA SOURCING ----
 
-# 1.0 Web Scraping
+# 1.1 Web Scraping ----
 url <- "https://www2.ed.gov/finaid/prof/resources/data/pell-institution.html"
 downloadString <- "https://www2.ed.gov/finaid/prof/resources/data/"
 
@@ -50,38 +51,40 @@ yearlyReports <- tibble(
 )
 
 
-# 1.1 Data Sources ----
-# url_1213 = "https://www2.ed.gov/finaid/prof/resources/data/pell-inst-12-13.xls"
-# url_1112 = "https://www2.ed.gov/finaid/prof/resources/data/pell-inst-11-12.xls"
-# url_1011 = "https://www2.ed.gov/finaid/prof/resources/data/pell-inst-11-12.xls"
-# url_0910 = "https://www2.ed.gov/finaid/prof/resources/data/pell-inst-09-10.xls"
-
-url_1314 = "https://www2.ed.gov/finaid/prof/resources/data/pell-inst-13-14.xls"
-url_1415 = "https://www2.ed.gov/finaid/prof/resources/data/pell-inst-14-15.xls"
-url_1516 = "https://www2.ed.gov/finaid/prof/resources/data/2015-16distofpellawdsrecipsbyinstn.xlsx"
-url_1617 = "https://www2.ed.gov/finaid/prof/resources/data/pellinst1617.xlsx"
-url_1718 = "https://www2.ed.gov/finaid/prof/resources/data/pellinst1718.xlsx"
-
 # 1.2 Collecting Data ----
-GET(url_1314, write_disk(pell_inst_13_14 <- tempfile(fileext = ".xls")))
-year_1314 = read_excel(pell_inst_13_14, col_names = T, skip = 4) %>%
-  mutate(Year = "2013-14")
+downloadData <- function(yearlyReportsDF){
+    
+  columnNames <- tibble()
+  
+  for(i in seq(1, nrow(yearlyReportsDF), 1)){
+    reportYear <- yearlyReportsDF[i, 1]$years
+    report <- yearlyReportsDF[i,2] 
+    fileExt <- tools::file_ext(report)
+    outputLocation <- paste0("data/", reportYear, ".csv")
+    
+    GET(report$report_link, write_disk(
+      yearlyReport <- tempfile(fileext = fileExt))
+    )
+    yearlyReport = read_excel(yearlyReport, col_names = F)
+    yearlyReport <- yearlyReport[!is.na(yearlyReport[,1]), ]
+    yearlyReport <- yearlyReport[!is.na(yearlyReport[,2]), ]
+    yearlyReport <- yearlyReport[!is.na(yearlyReport[,3]), ]
+    
+    yearlyReport <- yearlyReport %>%
+      janitor::row_to_names(row_number = 1)
+    
+    yearlyReport %>%
+      write_excel_csv(outputLocation)
+    
+    cols <- as.tibble(names(yearlyReport))
+    cols$year <- reportYear
+    columnNames <- rbind(columnNames, cols)
+  }
+  
+  return(columnNames)
+}
 
-GET(url_1415, write_disk(pell_inst_14_15 <- tempfile(fileext = ".xls")))
-year_1415 <- read_excel(pell_inst_14_15, col_names = T, skip = 4) %>%
-  mutate(Year = "2014-15")
-
-GET(url_1516, write_disk(pell_inst_15_16 <- tempfile(fileext = ".xlsx")))
-year_1516 <- read_excel(pell_inst_15_16, col_names = T, skip = 5) %>%
-  mutate(Year = "2015-16")
-
-GET(url_1617, write_disk(pell_inst_16_17 <- tempfile(fileext = ".xlsx")))
-year_1617 <- read_excel(pell_inst_16_17, col_names = T, skip = 4) %>%
-  mutate(Year = "2016-17")
-
-GET(url_1718, write_disk(pell_inst_17_18 <- tempfile(fileext = ".xlsx")))
-year_1718 <- read_excel(pell_inst_17_18, col_names = T, skip = 4) %>%
-  mutate(Year = "2017-18")
+yearly_report <- downloadData(yearlyReports)
 
 
 # 2.0 DATA PREPARATION ----
@@ -101,7 +104,10 @@ rename_cols <- function(dataset, newnames){
     old <- append(old, oldName)
   }
 
-    return(
+  print(paste0("Old col namess:", (paste0(old, collapse = ", "))))
+  print(paste0("New col namess:", (paste0(new, collapse = ", "))))    
+  
+  return(
     dataset %>%
       rename_with(~ new[which(old == .x)], .cols = old)
   )
