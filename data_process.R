@@ -45,46 +45,94 @@ reportLinks <- htmlOutput %>%
   unique()
 
 # year and report match
-yearlyReports <- tibble(
+reportSources <- tibble(
   years = years,
   report_link = paste0(downloadString, reportLinks)
 )
 
 
 # 1.2 Collecting Data ----
-downloadData <- function(yearlyReportsDF){
+downloadData <- function(reportSourcesDF, storageLocation){
     
-  columnNames <- tibble()
+  df <- tibble()
   
-  for(i in seq(1, nrow(yearlyReportsDF), 1)){
-    reportYear <- yearlyReportsDF[i, 1]$years
-    report <- yearlyReportsDF[i,2] 
+  for(i in seq(1, nrow(reportSourcesDF), 1)){
+    reportYear <- reportSourcesDF[i, 1]$years
+    report <- reportSourcesDF[i,2] 
     fileExt <- tools::file_ext(report)
-    outputLocation <- paste0("data/", reportYear, ".csv")
+    outputLocation <- paste0(storageLocation, reportYear, ".csv")
     
+    # downloads and save file temporarily
     GET(report$report_link, write_disk(
       yearlyReport <- tempfile(fileext = fileExt))
     )
+    # removes introductory paragraphs from the excel files
     yearlyReport = read_excel(yearlyReport, col_names = F)
     yearlyReport <- yearlyReport[!is.na(yearlyReport[,1]), ]
     yearlyReport <- yearlyReport[!is.na(yearlyReport[,2]), ]
     yearlyReport <- yearlyReport[!is.na(yearlyReport[,3]), ]
     
+    # promotes first full row as column names
     yearlyReport <- yearlyReport %>%
       janitor::row_to_names(row_number = 1)
     
+    # writes back to the desired location
     yearlyReport %>%
       write_excel_csv(outputLocation)
     
-    cols <- as.tibble(names(yearlyReport))
+    # populates a summary report with col names 
+    cols <- as_tibble(names(yearlyReport))
     cols$year <- reportYear
-    columnNames <- rbind(columnNames, cols)
+    df <- rbind(df, cols)
   }
   
-  return(columnNames)
+  return(df)
 }
 
-yearly_report <- downloadData(yearlyReports)
+reportSourcesSummary <- downloadData(reportSources, "data/")
+
+# 1.3 Data Cleaning ----
+# Convert char data type to factor
+str(reportSourcesSummary)
+reportSourcesSummary <- reportSourcesSummary %>%
+  mutate_if(is.character, as.factor)
+summary(reportSourcesSummary)
+
+unique(reportSourcesSummary$year) %>% length()
+table(reportSourcesSummary$value) %>% sort(decreasing = T)
+
+# Convert values to upper case
+reportSourcesSummary$valueCln <- toupper(reportSourcesSummary$value)
+table(reportSourcesSummary$value) %>% sort(decreasing = T)
+
+# Unify similar name
+similarColCount <- function(df, targetCol, keyword){
+
+  cols <- unique(
+    grep(keyword, pull(df, {{targetCol}}), ignore.case = T, value = T)
+)
+  filter(df, {{targetCol}} %in% c(cols)) %>%
+    count({{targetCol}}, sort = T) 
+  
+}
+
+similarColCount(reportSourcesSummary, valueCln, "awards")
+similarColCount(reportSourcesSummary, valueCln, "city")
+
+
+
+# Total cols in each report
+reportSourcesSummary %>%
+  ggplot(aes(y = year)) +
+  geom_bar(stat = "count", width = .5, show.legend = F, fill = "grey") +
+  labs(
+    y = "Year", x = "Total", title = "Year wise total columns"
+  ) + 
+  theme_minimal()
+
+# Report with exact same columns
+table(reportSourcesSummary)
+  
 
 
 # 2.0 DATA PREPARATION ----
