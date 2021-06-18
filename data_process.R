@@ -22,6 +22,7 @@ library(rvest)
 library(tidyverse)
 library(httr)
 library(janitor)
+library(patchwork)
 
 
 # 1.0 DATA SOURCING ----
@@ -91,7 +92,71 @@ downloadData <- function(reportSourcesDF, storageLocation){
 
 reportSourcesSummary <- downloadData(reportSources, "data/")
 
-# 1.3 Data Cleaning ----
+# 1.3 Data Explore ----
+
+# Total columns difference 
+yearly_cols <- reportSourcesSummary %>%
+  ggplot(aes(y = year)) +
+  geom_bar(stat = "count", width = .5, show.legend = F, color = "#4a0202") +
+  labs(
+    y = "Year", x = "Total", 
+    title = "Varying Column Counts for the Same Report Over the Years"
+  ) +
+  fastEda::theme_fasteda(color = "#0a0a0a") +
+  theme(plot.title = element_text(size = 12))
+
+
+# Non standardized column names
+similarColCount <- function(df, targetCol, keyword){
+  
+  cols <- unique(
+    grep(keyword, pull(df, {{targetCol}}), ignore.case = T, value = T)
+  )
+  filter(df, {{targetCol}} %in% c(cols)) %>%
+    count({{targetCol}}, sort = T) 
+  
+}
+
+uns_col_names <-
+  similarColCount(reportSourcesSummary, value, "name") %>%
+  mutate(info_type = "Institution Name Cols") %>%
+  rbind(
+    similarColCount(reportSourcesSummary, value, "awards") %>%
+      mutate(info_type = "Award Amount Cols")
+  ) %>%
+  rbind(
+    similarColCount(reportSourcesSummary, value, "city") %>%
+      mutate(info_type = "City Name Cols")
+  ) %>%
+ggplot(
+  aes(y = reorder(value, n), x = n, color = "#4a0202")
+) + 
+  geom_col(show.legend = F) +
+  facet_grid(info_type ~ ., scales = "free", space = "free") + 
+  labs(
+    title = "Varying Column Names Reporting Same Data",
+    y = NULL,
+    x = "Total"
+  ) +
+  fastEda::theme_fasteda(color = "#0a0a0a") +
+  theme(panel.border = element_rect(color = "white", fill = NA, size = 1)) +
+  theme(strip.background =element_rect(fill="black"))+
+  theme(strip.text = element_text(colour = 'white')) +
+  theme(plot.title = element_text(size = 12))
+
+# Combining data vizes
+yearly_cols + uns_col_names +
+  plot_annotation(
+    title = "A Brief Data Nightmare: Inconsistent Data Reporting",
+    subtitle = "Data Inconsistencies in the Web Scrapped Pell Grant Data",
+    caption = "Prepared By: Arafath Hossain \n #dash_app_pell",
+    theme = fastEda::theme_fasteda(color = "#e6e6e6") +
+      theme(text = element_text(color = "black"),
+            plot.title = element_text(size = 14, hjust = 0.5),
+            plot.subtitle = element_text(size = 10, hjust = 0.5, vjust = 5))
+  ) 
+
+# 1.4 Data Cleaning ----
 # Convert char data type to factor
 str(reportSourcesSummary)
 reportSourcesSummary <- reportSourcesSummary %>%
@@ -106,29 +171,6 @@ reportSourcesSummary$valueCln <- toupper(reportSourcesSummary$value)
 table(reportSourcesSummary$value) %>% sort(decreasing = T)
 
 # Unify similar name
-similarColCount <- function(df, targetCol, keyword){
-
-  cols <- unique(
-    grep(keyword, pull(df, {{targetCol}}), ignore.case = T, value = T)
-)
-  filter(df, {{targetCol}} %in% c(cols)) %>%
-    count({{targetCol}}, sort = T) 
-  
-}
-
-similarColCount(reportSourcesSummary, valueCln, "awards")
-similarColCount(reportSourcesSummary, valueCln, "city")
-
-
-
-# Total cols in each report
-reportSourcesSummary %>%
-  ggplot(aes(y = year)) +
-  geom_bar(stat = "count", width = .5, show.legend = F, fill = "grey") +
-  labs(
-    y = "Year", x = "Total", title = "Year wise total columns"
-  ) + 
-  theme_minimal()
 
 # Report with exact same columns
 table(reportSourcesSummary)
