@@ -179,47 +179,98 @@ table(reportSourcesSummary)
 
 # 2.0 DATA PREPARATION ----
 # 2.1 Function for Data Processing ----
-rename_cols <- function(dataset, newnames){
+rename_cols <- function(dataset, nameMatchDf, matchOldCol, matchNewCol){
+  
+  # setting up variables
   oldNames <- names(dataset)
+  newNames <- unique(nameMatchDf %>% pull({{matchNewCol}}))
+  newNamesCopy <- newNames
+  name_match <- tibble(old = as.character(), new = as.character()) # blank tibble to store old and new name match pairs
   
-  new <- vector()
-  old <- vector()
-  
-  for(newName in newnames){
-    pattern <- strsplit(newName, split = " ")[[1]] %>%
+  # iterating over the dataset to find old and new name match
+  for(matchOldName in pull(nameMatchDf, {{matchOldCol}})){
+    pattern <- strsplit(matchOldName, split = " ")[[1]] %>%
       rlist::list.last()
     oldName <- grep(pattern, oldNames, ignore.case = T, value = T)
     
-    new <- append(new, newName)
-    old <- append(old, oldName)
+    if(rlang::is_empty(oldName)){
+      message(paste0(matchOldName, " doesn't exist!"))
+    } else {
+      if(length(oldName) > 1){
+        message(glue::glue("{pattern} matches multiple cols!"))
+      }else {
+        newName <- filter(nameMatchDf, {{matchOldCol}} == oldName) %>%
+          pull({{matchNewCol}})
+      }
+      
+      # checking if new column is already detected and skipped if already populated
+      if(sum(oldNames %in% matchOldName) == 1) {
+        name_match <- name_match %>%
+          bind_rows(c(old = matchOldName, new = newName)) %>%
+          unique() %>%
+          drop_na() # drops name matches where no matched old column exists
+        
+        newNames <- newNames[!newNames %in% newName]
+      }
+    }
   }
-
-  print(paste0("Old col namess:", (paste0(old, collapse = ", "))))
-  print(paste0("New col namess:", (paste0(new, collapse = ", "))))    
   
-  return(
-    dataset %>%
-      rename_with(~ new[which(old == .x)], .cols = old)
-  )
+  # keeping only the columns that match with new names
+  dataset <- select({dataset}, all_of(name_match$old))
+  # renaming old column names
+  colnames(dataset) <- name_match$new
+  
+  # adding null for the absent columns
+  absentCols <- setdiff(newNamesCopy, names(dataset))
+  for(col in absentCols){
+    print(paste0("Absent col: ", col))
+    dataset <- dataset %>%
+      mutate(!!col := NA)
+  }
+  
+  return(dataset)
 }
 
-newnames <- c(
-  "Institution City",
-  "Institution Name",
-  "Institution State",
-  "Institution Type And Control",
-  "Ope Id",
-  "Total Awards",
-  "Total Recipients",
-  "Year"
+# setting up a table with old names and new names matches
+name_match_df <- tibble(
+  oldNames = c(
+    "Name", "Institution", "Institution_Name",
+    "Institution City", "City", "Institution_City",
+    "Institution State", "State", "Institution_State",
+    "Total Awards", "Awards", "Total_Awards", 
+    "Total Recipients", "Recipients", "Total_Recipients",
+    "Year"
+    
+  ),
+  
+  newNames = c(
+    "Institution Name", "Institution Name", "Institution Name",
+    "Institution City", "Institution City", "Institution City",
+    "Institution State", "Institution State", "Institution State",
+    "Total Awards", "Total Awards", "Total Awards",
+    "Total Recipients", "Total Recipients", "Total Recipients",
+    "Year"
+  )
 )
 
-# 2.2 Data Process, Aggregating, and Storing ----
-combo <- rename_cols(year_1314, newnames) %>% 
-  rbind(rename_cols(year_1415, newnames)) %>% 
-  rbind(rename_cols(year_1516, newnames))%>% 
-  rbind(rename_cols(year_1617, newnames))%>% 
-  rbind(rename_cols(year_1718, newnames)) %>%
-  tidyr::drop_na()
-write.csv(combo, "pell_grant_data.csv", row.names = F)
+# loading all files
+files <- list.files("data/")
+data_combo <- NULL
+for(file in files){
+  
+  year = strsplit(file, ".csv")[[1]]
+  data <- read.csv(paste0("data/", file)) %>%
+    mutate(Year = year)
+  message(glue::glue("\n Processing file for: {year}"))
+  data <- rename_cols(
+    dataset = data, 
+    nameMatchDf = name_match_df,
+    matchOldCol = oldNames, 
+    matchNewCol = newNames)
+  
+  data_combo <<- data_combo %>%
+    rbind(data)
+}
+
+write.csv(data_combo, "data/pell_grant_data.csv", row.names = F)
 
