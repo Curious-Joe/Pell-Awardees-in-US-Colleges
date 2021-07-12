@@ -272,5 +272,10 @@ for(file in files){
     rbind(data)
 }
 
+# creating column for year start and session
+data_combo <- data_combo %>%
+  rename(Session = Year) %>%
+  separate(Session, sep = "-", into = c("Year", NA), remove = F) 
+
 write.csv(data_combo, "data/pell_grant_data.csv", row.names = F)
 

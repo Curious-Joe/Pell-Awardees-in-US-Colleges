@@ -6,6 +6,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
+import numpy as np
 from dash.dependencies import Input, Output, State
 import cufflinks as cf
 import plotly.express as px
@@ -13,12 +14,7 @@ import plotly.express as px
 
 # Initialize app
 
-app = dash.Dash(
-    __name__,
-    meta_tags=[
-        {"name": "viewport", "content": "width=device-width, initial-scale=1.0"}
-    ],
-)
+app = dash.Dash(__name__)
 app.title = "Where are all the Pell Grantees?"
 server = app.server
 
@@ -26,399 +22,127 @@ server = app.server
 
 APP_PATH = str(pathlib.Path(__file__).parent.resolve())
 
-df_lat_lon = pd.read_csv(
-    os.path.join(APP_PATH, os.path.join("data", "world_country_and_usa_states_latitude_and_longitude_values.csv"))
-)
-# df_lat_lon = pd.read_csv("C:/Users/ahfah/Desktop/Data Science Projects/Dash App/pell_students_dash_app/data/world_country_and_usa_states_latitude_and_longitude_values.csv")
-# df_full_data = pd.read_csv("C:/Users/ahfah/Desktop/Data Science Projects/Dash App/pell_students_dash_app/data/pell_grant_data.csv")
+# ------------------------------------------------------------------
+# data load and process
+# ------------------------------------------------------------------
+pell_df = pd.read_csv("data/pell_grant_data.csv")
+state_year_wise_total = pell_df.groupby(['Institution State', 'Year'])[['Total Recipients']].sum()
+state_year_wise_total.reset_index(inplace = True)
 
-df_lat_lon = df_lat_lon.iloc[:, -4:]
+YEARS = pell_df['Year'].unique()
+# YEARS = [i.split('-') for i in YEARS]
+# def Extract(lst):
+#     return [item[0] for item in lst]
+# YEARS = Extract(YEARS)
+# YEARS = [int(numeric_string) for numeric_string in YEARS]
 
-df_full_data = pd.read_csv(
-    os.path.join(
-        APP_PATH, os.path.join("data", "pell_grant_data.csv")
-    )
-)
+# ------------------------------------------------------------------
+# app layout
+# ------------------------------------------------------------------
 
-# adding new column to show city, state of the institution
-df_full_data["Location"] = (
-    df_full_data["Institution City"] + ", " + df_full_data["Institution State"]
-)
+app.layout = html.Div([
 
-# YEARS = df_full_data["Year"].unique()
-YEARS = [2013, 2014, 2015, 2016, 2017]
-
-BINS = [
-    "1-90",
-    "90.1-382",
-    "382.1-1403.75",
-    "1403.76-184763"
-]
-
-DEFAULT_COLORSCALE = [
-    "#f2fffb",
-    "#bbffeb",
-    "#98ffe0",
-    "#79ffd6"
-]
-
-DEFAULT_OPACITY = 0.8
-
-mapbox_access_token = "pk.eyJ1IjoicGxvdGx5bWFwYm94IiwiYSI6ImNrOWJqb2F4djBnMjEzbG50amg0dnJieG4ifQ.Zme1-Uzoi75IaFbieBDl3A"
-mapbox_style = "mapbox://styles/plotlymapbox/cjvprkf3t1kns1cqjxuxmwixz"
-
-# App layout
-
-app.layout = html.Div(
-    id="root",
-    children=[
-        html.Div(
-            id="header",
-            children=[
+    html.Div(
+        id="header",
+        children=[
+            html.A(
                 html.Img(id="logo", src=app.get_asset_url("dash-logo.png")),
-                html.H4(children="Where are all the Pell grantees?"),
-                html.P(
-                    id="description",
-                    children="Pell, the largest federal grant program for college students got a renewed attention because of its inclusion in the US News & World Report university ranking calculation. \
-                    While it makes sense to incentivise institutions for having larger share of of lower income students, it can be an undue punishment for institutions that are in the states with lower population. \
-                    This dashboard provides a glimpse over the states overall comparison against each other and institutions that are take the top places in terms of having the most Pell grantees.",
-                ),
-           ],
-        ),
-        html.Div(
-            id="app-container",
-            children=[
-                html.Div(
-                    id="left-column",
-                    children=[
-                        html.Div(
-                            id="slider-container",
-                            children=[
-                                html.P(
-                                    id="slider-text",
-                                    children="Drag the slider to change the year:",
-                                ),
-                                dcc.Slider(
-                                    id="years-slider",
-                                    min=min(YEARS),
-                                    max=max(YEARS),
-                                    value=min(YEARS),
-                                    marks={
-                                        str(year): {
-                                            "label": str(year),
-                                            "style": {"color": "#7fafdf"},
-                                        }
-                                        for year in YEARS
-                                    },
-                                ),
-                            ],
-                        ),
-                        html.Div(
-                            id="heatmap-container",
-                            children=[
-                                html.P(
-                                    "Heatmap of total Pell award recipients \
-                            in year {0}".format(
-                                        min(YEARS)
-                                    ),
-                                    id="heatmap-title",
-                                ),
-                                dcc.Graph(
-                                    id="state-choropleth",
-                                    figure=dict(
-                                        layout=dict(
-                                            mapbox=dict(
-                                                layers=[],
-                                                # accesstoken=mapbox_access_token,
-                                                # style=mapbox_style,
-                                                center=dict(
-                                                    lat=38.72490, lon=-95.61446
-                                                ),
-                                                pitch=0,
-                                                zoom=3.5,
-                                            ),
-                                            autosize=True,
-                                        ),
-                                    ),
-                                ),
-                            ],
-                        ),
-                    ],
-                ),
-                # html.Div(
-                #     id="graph-container",
-                #     children=[
-                #         html.P(id="chart-selector", children="Select chart:"),
-                #         dcc.Dropdown(
-                #             options=[
-                #                 {
-                #                     "label": "Histogram of total number of deaths (single year)",
-                #                     "value": "show_absolute_deaths_single_year",
-                #                 },
-                #                 {
-                #                     "label": "Histogram of total number of deaths (1999-2016)",
-                #                     "value": "absolute_deaths_all_time",
-                #                 },
-                #                 {
-                #                     "label": "Age-adjusted death rate (single year)",
-                #                     "value": "show_death_rate_single_year",
-                #                 },
-                #                 {
-                #                     "label": "Trends in age-adjusted death rate (1999-2016)",
-                #                     "value": "death_rate_all_time",
-                #                 },
-                #             ],
-                #             value="show_death_rate_single_year",
-                #             id="chart-dropdown",
-                #         ),
-                #         dcc.Graph(
-                #             id="selected-data",
-                #             figure=dict(
-                #                 data=[dict(x=0, y=0)],
-                #                 layout=dict(
-                #                     paper_bgcolor="#F4F4F8",
-                #                     plot_bgcolor="#F4F4F8",
-                #                     autofill=True,
-                #                     margin=dict(t=75, r=50, b=100, l=50),
-                #                 ),
-                #             ),
-                #         ),
-                #     ],
-                # ),
-            ],
-        ),
-    ],
-)
+                href="https://plotly.com/dash/",
+            ),
+            html.A(
+                html.Button("Enterprise Demo", className="link-button"),
+                href="https://plotly.com/get-demo/",
+            ),
+            html.A(
+                html.Button("Source Code", className="link-button"),
+                href="https://github.com/plotly/dash-sample-apps/tree/main/apps/dash-opioid-epidemic",
+            ),
+            html.H4(children="Pell Awardees Across the US"),
+            html.P(
+                id="description",
+                children="Check where all the Pell awardee students are studying.",
+            ),
+        ],
+    ),
+
+    html.Div(
+        id="slider-container",
+        children=[
+            html.P(
+                id="slct_year",
+                children="Drag the slider to change the year:",
+            ),
+            # dcc.Slider(
+            #     id="years_slider",
+            #     min=min(YEARS),
+            #     max=max(YEARS),
+            #     value=min(YEARS),
+            #     marks={
+            #         str(year): {
+            #             "label": str(year),
+            #             "style": {"color": "#7fafdf"},
+            #         }
+            #         for year in YEARS
+            #     },
+            # ),
+            dcc.Dropdown(id="years_dropdn",
+                         options=[{'label': i, 'value': i} for i in YEARS],
+                         multi=False,
+                         value=min(YEARS),
+                         style={'width': "40%"}
+                         ),
+        ],
+    ),
+
+    html.Div(id='output_container', children=[]),
+    html.Br(),
+
+    dcc.Graph(id='pell_app', figure={})
+
+])
 
 
+# ------------------------------------------------------------------------------
+# Connect the Plotly graphs with Dash Components
 @app.callback(
-    Output("state-choropleth", "figure"),
-    [Input("years-slider", "value")],
-    [State("state-choropleth", "figure")],
+    [Output(component_id='output_container', component_property='children'),
+     Output(component_id='pell_app', component_property='figure')],
+    [Input(component_id='years_dropdn', component_property='value')]
 )
-def display_map(year, figure):
-    cm = dict(zip(BINS, DEFAULT_COLORSCALE))
+def update_graph(year_slctd):
+    print(year_slctd)
+    print(type(year_slctd))
 
-    data = [
-        dict(
-            lat=df_lat_lon["usa_state_latitude"],
-            lon=df_lat_lon["usa_state_longitude"],
-            text=df_lat_lon["usa_state"],
-            type="scattermapbox",
-            hoverinfo="text",
-            marker=dict(size=5, color="white", opacity=0),
-        )
-    ]
+    container = "The year chosen by user was: {}".format(year_slctd)
 
-    annotations = [
-        dict(
-            showarrow=False,
-            align="right",
-            text="<b>Age-adjusted death rate<br>per county per year</b>",
-            font=dict(color="#2cfec1"),
-            bgcolor="#1f2630",
-            x=0.95,
-            y=0.95,
-        )
-    ]
+    state_year_wise_total_copy = state_year_wise_total.copy()
+    state_year_wise_total_copy = state_year_wise_total_copy[state_year_wise_total_copy["Year"] == year_slctd]
+    # state_year_wise_total_copy = state_year_wise_total_copy[state_year_wise_total_copy["Affected by"] == "Varroa_mites"]
 
-    for i, bin in enumerate(reversed(BINS)):
-        color = cm[bin]
-        annotations.append(
-            dict(
-                arrowcolor=color,
-                text=bin,
-                x=0.95,
-                y=0.85 - (i / 20),
-                ax=-60,
-                ay=0,
-                arrowwidth=5,
-                arrowhead=0,
-                bgcolor="#1f2630",
-                font=dict(color="#2cfec1"),
-            )
-        )
-
-    if "layout" in figure:
-        lat = figure["layout"]["mapbox"]["center"]["lat"]
-        lon = figure["layout"]["mapbox"]["center"]["lon"]
-        zoom = figure["layout"]["mapbox"]["zoom"]
-    else:
-        lat = 38.72490
-        lon = -95.61446
-        zoom = 3.5
-
-    layout = dict(
-        mapbox=dict(
-            layers=[],
-            accesstoken=mapbox_access_token,
-            style=mapbox_style,
-            center=dict(lat=lat, lon=lon),
-            zoom=zoom,
-        ),
-        hovermode="closest",
-        margin=dict(r=0, l=0, t=0, b=0),
-        annotations=annotations,
-        dragmode="lasso",
+    # Plotly Express
+    fig = px.choropleth(
+        data_frame=state_year_wise_total_copy,
+        locationmode='USA-states',
+        locations='Institution State',
+        scope="usa",
+        color='Total Recipients',
+        hover_data=['Institution State', 'Year', 'Total Recipients'],
+        color_continuous_scale=px.colors.sequential.YlOrRd,
+        labels={'Total Recipients': 'of Pell Grants'},
+        template='plotly_dark'
     )
 
-    base_url = "https://raw.githubusercontent.com/jackparmer/mapbox-counties/master/"
-    for bin in BINS:
-        geo_layer = dict(
-            sourcetype="geojson",
-            source=base_url + str(year) + "/" + bin + ".geojson",
-            type="fill",
-            color=cm[bin],
-            opacity=DEFAULT_OPACITY,
-            # CHANGE THIS
-            fill=dict(outlinecolor="#afafaf"),
-        )
-        layout["mapbox"]["layers"].append(geo_layer)
+    # fig.update_layout(
+    #     title_text="Bees Affected by Mites in the USA",
+    #     title_xanchor="center",
+    #     title_font=dict(size=24),
+    #     title_x=0.5,
+    #     geo=dict(scope='usa'),
+    # )
 
-    fig = dict(data=data, layout=layout)
-    return fig
+    return container, fig
 
 
-@app.callback(Output("heatmap-title", "children"), [Input("years-slider", "value")])
-def update_map_title(year):
-    return "Heatmap of age adjusted mortality rates \
-				from poisonings in year {0}".format(
-        year
-    )
-
-
-# @app.callback(
-#     Output("selected-data", "figure"),
-#     [
-#         Input("state-choropleth", "selectedData"),
-#         Input("chart-dropdown", "value"),
-#         Input("years-slider", "value"),
-#     ],
-# )
-# def display_selected_data(selectedData, chart_dropdown, year):
-#     if selectedData is None:
-#         return dict(
-#             data=[dict(x=0, y=0)],
-#             layout=dict(
-#                 title="Click-drag on the map to select counties",
-#                 paper_bgcolor="#1f2630",
-#                 plot_bgcolor="#1f2630",
-#                 font=dict(color="#2cfec1"),
-#                 margin=dict(t=75, r=50, b=100, l=75),
-#             ),
-#         )
-#     pts = selectedData["points"]
-#     fips = [str(pt["text"].split("<br>")[-1]) for pt in pts]
-#     for i in range(len(fips)):
-#         if len(fips[i]) == 4:
-#             fips[i] = "0" + fips[i]
-#     dff = df_full_data[df_full_data["County Code"].isin(fips)]
-#     dff = dff.sort_values("Year")
-#
-#     regex_pat = re.compile(r"Unreliable", flags=re.IGNORECASE)
-#     dff["Age Adjusted Rate"] = dff["Age Adjusted Rate"].replace(regex_pat, 0)
-#
-#     if chart_dropdown != "death_rate_all_time":
-#         title = "Absolute deaths per county, <b>1999-2016</b>"
-#         AGGREGATE_BY = "Deaths"
-#         if "show_absolute_deaths_single_year" == chart_dropdown:
-#             dff = dff[dff.Year == year]
-#             title = "Absolute deaths per county, <b>{0}</b>".format(year)
-#         elif "show_death_rate_single_year" == chart_dropdown:
-#             dff = dff[dff.Year == year]
-#             title = "Age-adjusted death rate per county, <b>{0}</b>".format(year)
-#             AGGREGATE_BY = "Age Adjusted Rate"
-#
-#         dff[AGGREGATE_BY] = pd.to_numeric(dff[AGGREGATE_BY], errors="coerce")
-#         deaths_or_rate_by_fips = dff.groupby("County")[AGGREGATE_BY].sum()
-#         deaths_or_rate_by_fips = deaths_or_rate_by_fips.sort_values()
-#         # Only look at non-zero rows:
-#         deaths_or_rate_by_fips = deaths_or_rate_by_fips[deaths_or_rate_by_fips > 0]
-#         fig = deaths_or_rate_by_fips.iplot(
-#             kind="bar", y=AGGREGATE_BY, title=title, asFigure=True
-#         )
-#
-#         fig_layout = fig["layout"]
-#         fig_data = fig["data"]
-#
-#         fig_data[0]["text"] = deaths_or_rate_by_fips.values.tolist()
-#         fig_data[0]["marker"]["color"] = "#2cfec1"
-#         fig_data[0]["marker"]["opacity"] = 1
-#         fig_data[0]["marker"]["line"]["width"] = 0
-#         fig_data[0]["textposition"] = "outside"
-#         fig_layout["paper_bgcolor"] = "#1f2630"
-#         fig_layout["plot_bgcolor"] = "#1f2630"
-#         fig_layout["font"]["color"] = "#2cfec1"
-#         fig_layout["title"]["font"]["color"] = "#2cfec1"
-#         fig_layout["xaxis"]["tickfont"]["color"] = "#2cfec1"
-#         fig_layout["yaxis"]["tickfont"]["color"] = "#2cfec1"
-#         fig_layout["xaxis"]["gridcolor"] = "#5b5b5b"
-#         fig_layout["yaxis"]["gridcolor"] = "#5b5b5b"
-#         fig_layout["margin"]["t"] = 75
-#         fig_layout["margin"]["r"] = 50
-#         fig_layout["margin"]["b"] = 100
-#         fig_layout["margin"]["l"] = 50
-#
-#         return fig
-#
-#     fig = dff.iplot(
-#         kind="area",
-#         x="Year",
-#         y="Age Adjusted Rate",
-#         text="County",
-#         categories="County",
-#         colors=[
-#             "#1b9e77",
-#             "#d95f02",
-#             "#7570b3",
-#             "#e7298a",
-#             "#66a61e",
-#             "#e6ab02",
-#             "#a6761d",
-#             "#666666",
-#             "#1b9e77",
-#         ],
-#         vline=[year],
-#         asFigure=True,
-#     )
-#
-#     for i, trace in enumerate(fig["data"]):
-#         trace["mode"] = "lines+markers"
-#         trace["marker"]["size"] = 4
-#         trace["marker"]["line"]["width"] = 1
-#         trace["type"] = "scatter"
-#         for prop in trace:
-#             fig["data"][i][prop] = trace[prop]
-#
-#     # Only show first 500 lines
-#     fig["data"] = fig["data"][0:500]
-#
-#     fig_layout = fig["layout"]
-#
-#     # See plot.ly/python/reference
-#     fig_layout["yaxis"]["title"] = "Age-adjusted death rate per county per year"
-#     fig_layout["xaxis"]["title"] = ""
-#     fig_layout["yaxis"]["fixedrange"] = True
-#     fig_layout["xaxis"]["fixedrange"] = False
-#     fig_layout["hovermode"] = "closest"
-#     fig_layout["title"] = "<b>{0}</b> counties selected".format(len(fips))
-#     fig_layout["legend"] = dict(orientation="v")
-#     fig_layout["autosize"] = True
-#     fig_layout["paper_bgcolor"] = "#1f2630"
-#     fig_layout["plot_bgcolor"] = "#1f2630"
-#     fig_layout["font"]["color"] = "#2cfec1"
-#     fig_layout["xaxis"]["tickfont"]["color"] = "#2cfec1"
-#     fig_layout["yaxis"]["tickfont"]["color"] = "#2cfec1"
-#     fig_layout["xaxis"]["gridcolor"] = "#5b5b5b"
-#     fig_layout["yaxis"]["gridcolor"] = "#5b5b5b"
-#
-#     if len(fips) > 500:
-#         fig["layout"][
-#             "title"
-#         ] = "Age-adjusted death rate per county per year <br>(only 1st 500 shown)"
-#
-#     return fig
-
-
-if __name__ == "__main__":
+# ------------------------------------------------------------------------------
+if __name__ == '__main__':
     app.run_server(debug=True)
