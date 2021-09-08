@@ -40,11 +40,13 @@ ins_year_wise_total_recip = pell_df.groupby(['Institution Name', 'Year'])[['Tota
 ins_year_wise_total_recip.reset_index(inplace = True)
 
 YEARS = pell_df['Year'].unique()
-# YEARS = [i.split('-') for i in YEARS]
-# def Extract(lst):
-#     return [item[0] for item in lst]
-# YEARS = Extract(YEARS)
-# YEARS = [int(numeric_string) for numeric_string in YEARS]
+slider_labels = {}
+for i in YEARS:
+    str_year = str(i)
+    slider_labels[i] = str_year
+
+STATES = pell_df['Institution State'].unique()
+STATES = [x for x in STATES if x == x]
 
 # ------------------------------------------------------------------
 # app layout
@@ -59,18 +61,10 @@ app.layout = html.Div([
                 html.Img(id="logo", src=app.get_asset_url("dash-logo.png")),
                 href="https://plotly.com/dash/",
             ),
-            html.A(
-                html.Button("Enterprise Demo", className="link-button"),
-                href="https://plotly.com/get-demo/",
-            ),
-            html.A(
-                html.Button("Source Code", className="link-button"),
-                href="https://github.com/plotly/dash-sample-apps/tree/main/apps/dash-opioid-epidemic",
-            ),
             html.H4(children="Pell Awardees Across the US"),
-            html.P(
+            html.H4(
                 id="description",
-                children="Check where all the Pell awardee students are studying.",
+                children="Check where all the Pell awardee students are studying."
             ),
         ],
     ),
@@ -82,60 +76,92 @@ app.layout = html.Div([
                 id="slct_year",
                 children="Drag the slider to change the year:",
             ),
-            dcc.Dropdown(id="years_dropdn",
-                         options=[{'label': i, 'value': i} for i in YEARS],
-                         multi=False,
-                         value=min(YEARS),
-                         style={'width': "40%"}
-                         ),
+            dcc.RangeSlider(
+                id='year-range-slider',
+                min=min(YEARS),
+                max=max(YEARS),
+                step=1,
+                value=[min(YEARS), min(YEARS) + 3],
+                marks =
+                # slider_labels
+                {1999: '1999',
+                 2000: '2000',
+                 2001: '2001',
+                 2002: '2002',
+                 2003: '2003',
+                 2004: '2004',
+                 2005: '2005',
+                 2006: '2006',
+                 2007: '2007',
+                 2008: '2008',
+                 2009: '2009',
+                 2010: '2010',
+                 2011: '2011',
+                 2012: '2012',
+                 2013: '2013',
+                 2014: '2014',
+                 2015: '2015',
+                 2016: '2016',
+                 2017: '2017'}
+            )
         ],
     ),
 
-    html.Div(id='output_container', children=[]),
-    html.Br(),
+    html.Div([
     html.Div(
-        # id = "maps",
-        children=[
-        dcc.Graph(id='map_recipient', style={'display': 'inline-block', 'width':'50%', 'height': '150%'}, figure={}),
-        # dcc.Graph(id='map_dollar', style={'display': 'inline-block'}, figure={})
-        dcc.Graph(id='top10_race', style={'display': 'inline-block', 'width': '50%', 'height':'100%'}, figure={})
-    ]),
+            # id = "maps",
+            children=[
+            dcc.Graph(id='map_recipient', style={'display': 'inline-block', 'width':'100%', 'height': '100%'}, figure={}),
+            dcc.Graph(id='map_dollar', style={'display': 'inline-block','width':'100%', 'height': '100%'}, figure={})
+            ], className='six columns'
+        ),
 
-    html.Div(
-        id = "maps",
-        children=[
-        # dcc.Graph(id='map_recipient', style={'display': 'inline-block'}, figure={})
-        dcc.Graph(id='map_dollar', style={'display': 'inline-block'}, figure={})
-    ])
+        html.Div(
+            id = "maps",
+            children=[
+                dcc.Dropdown(id='dropdown',
+                             options= [{'label': i, 'value': i} for i in STATES],
+                             multi=False,
+                             placeholder='Select State...',
+                             ),
+                dcc.Graph(id='top10_rank', style={'display': 'inline-block', 'width': '100%', 'height': '200%'}, figure={})
+            ], className='six columns'
+        )
+    ], className="column")
+
 ])
 
 
 # ------------------------------------------------------------------------------
 # Connect the Plotly graphs with Dash Components
 @app.callback(
-    [Output(component_id='output_container', component_property='children'),
+    [
      Output(component_id='map_recipient', component_property='figure'),
      Output(component_id='map_dollar', component_property='figure'),
-     Output(component_id='top10_race', component_property='figure')
+     Output(component_id='top10_rank', component_property='figure')
      ],
-    [Input(component_id='years_dropdn', component_property='value')]
+    [Input(component_id='year-range-slider', component_property='value')]
 )
 def update_graph(year_slctd):
     # print(year_slctd)
     # print(type(year_slctd))
 
-    input_print = "The year chosen by user was: {}".format(year_slctd)
+    input_print = "The year range chosen is: {}".format(year_slctd)
+    year_slctd = np.array(range(year_slctd[0], year_slctd[1]))
+    # print(type(year_slctd))
 
     # year-wise total recipients
     state_year_wise_total_recip_copy = state_year_wise_total_recip.copy()
-    state_year_wise_total_recip_copy = state_year_wise_total_recip_copy[state_year_wise_total_recip_copy["Year"] == year_slctd]
+    state_year_wise_total_recip_copy = state_year_wise_total_recip_copy[state_year_wise_total_recip_copy["Year"].isin(year_slctd)]
+    state_year_wise_total_recip_copy = state_year_wise_total_recip_copy.groupby(['Institution State'])[['Total Recipients']].sum()
+    state_year_wise_total_recip_copy.reset_index(inplace=True)
 
     # year-wise total award $$
     state_year_wise_total_award_copy = state_year_wise_total_award.copy()
-    state_year_wise_total_award_copy = state_year_wise_total_award_copy[state_year_wise_total_award_copy["Year"] == year_slctd]
+    state_year_wise_total_award_copy = state_year_wise_total_award_copy[state_year_wise_total_award_copy["Year"].isin(year_slctd)]
 
     # year-wise top 10 institutions
-    ins_year_wise_total_recip = pell_df[pell_df['Year'] <= year_slctd]
+    ins_year_wise_total_recip = pell_df[pell_df['Year'].isin(year_slctd)]
     top_10 = ins_year_wise_total_recip.groupby(["Year"]).apply(lambda x: x.sort_values(["Total Recipients"], ascending=False)).reset_index(
         drop=True)
     top_10 = top_10.groupby('Year').head(10)
@@ -150,7 +176,7 @@ def update_graph(year_slctd):
         locations='Institution State',
         scope="usa",
         color='Total Recipients',
-        hover_data=['Institution State', 'Year', 'Total Recipients'],
+        hover_data=['Institution State', 'Total Recipients'],
         color_continuous_scale= 'cividis',# px.colors.sequential.YlOrRd,
         labels={'Total Recipients': '# Awarded'},
         template='plotly_dark'
@@ -198,7 +224,7 @@ def update_graph(year_slctd):
     rankPlot.update_xaxes(autorange='reversed', type='category')
     rankPlot.update_yaxes(visible=False, showticklabels=False, autorange='reversed')
 
-    return input_print, recip_fig, award_fig, rankPlot
+    return recip_fig, award_fig, rankPlot
 
 
 # ------------------------------------------------------------------------------
