@@ -1,2 +1,5 @@
 temp
 delete*
+.idea
+_pycache_
+test*
