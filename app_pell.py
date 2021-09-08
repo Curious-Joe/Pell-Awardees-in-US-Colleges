@@ -3,7 +3,6 @@ import pathlib
 import re
 
 import dash
-# import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
@@ -11,7 +10,7 @@ import numpy as np
 from dash.dependencies import Input, Output, State
 import cufflinks as cf
 import plotly.express as px
-from raceplotly.plots import barplot
+import plotly.graph_objects as go
 
 # Initialize app
 
@@ -97,9 +96,9 @@ app.layout = html.Div([
     html.Div(
         # id = "maps",
         children=[
-        dcc.Graph(id='map_recipient', style={'display': 'inline-block', 'width':'40%', 'height': '150%'}, figure={}),
+        dcc.Graph(id='map_recipient', style={'display': 'inline-block', 'width':'50%', 'height': '150%'}, figure={}),
         # dcc.Graph(id='map_dollar', style={'display': 'inline-block'}, figure={})
-        dcc.Graph(id='top10_race', style={'display': 'inline-block', 'width': '60%', 'height':'70vh'}, figure={})
+        dcc.Graph(id='top10_race', style={'display': 'inline-block', 'width': '50%', 'height':'100%'}, figure={})
     ]),
 
     html.Div(
@@ -187,14 +186,19 @@ def update_graph(year_slctd):
         geo=dict(scope='usa'),
     )
 
-    # Race plot of top 10 colleges
-    # racePlot = barplot(top_10, item_column='Institution Name', value_column='Total Recipients', time_column='Year')
-    # racePlotOutput = racePlot.plot(title='Top Country Population from 1952-2007', item_label='Top Country', value_label='pop',
-    #                  time_label='Year: ', frame_duration=600)
-    linePlot = px.line(top_10, x='Year', y='rank', color='Institution Name')
+    # Rank plot of top 10 colleges
+    lineRank = px.line(top_10, x = 'Year', y='rank', color='Institution Name')
+    scatterRank = px.scatter(top_10, x='Year', y='rank', color='Institution Name', text='rank')
+    scatterRank.update_traces(
+        marker = dict(size = 20, symbol = 'square'),
+        textposition = 'middle center'
+    )
 
+    rankPlot = go.Figure(data=lineRank.data + scatterRank.data)
+    rankPlot.update_xaxes(autorange='reversed', type='category')
+    rankPlot.update_yaxes(visible=False, showticklabels=False, autorange='reversed')
 
-    return input_print, recip_fig, award_fig, linePlot
+    return input_print, recip_fig, award_fig, rankPlot
 
 
 # ------------------------------------------------------------------------------
