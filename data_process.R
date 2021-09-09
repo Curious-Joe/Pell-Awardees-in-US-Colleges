@@ -201,6 +201,12 @@ rename_cols <- function(dataset, nameMatchDf, matchOldCol, matchNewCol){
       }else {
         newName <- filter(nameMatchDf, {{matchOldCol}} == oldName) %>%
           pull({{matchNewCol}})
+        # newName <- grep(oldName, 
+        #                 pull(nameMatchDf, {{matchNewCol}}), 
+        #                 ignore.case = T, 
+        #                 value = T) %>% 
+        #   unique()
+        print(glue::glue("new name: {newName}"))
       }
       
       # checking if new column is already detected and skipped if already populated
@@ -209,14 +215,17 @@ rename_cols <- function(dataset, nameMatchDf, matchOldCol, matchNewCol){
           bind_rows(c(old = matchOldName, new = newName)) %>%
           unique() %>%
           drop_na() # drops name matches where no matched old column exists
-        
+        print(glue::glue("new names: {name_match$new}"))
+        print(glue::glue("old names: {name_match$old}"))
         newNames <- newNames[!newNames %in% newName]
       }
     }
   }
-  
+  # print(glue::glue("new names: {name_match$new}"))
+  # print(glue::glue("old names: {name_match$old}"))
   # keeping only the columns that match with new names
   dataset <- select({dataset}, all_of(name_match$old))
+  # print(glue::glue("old names: {names(dataset)}"))
   # renaming old column names
   colnames(dataset) <- name_match$new
   
@@ -252,6 +261,7 @@ name_match_df <- tibble(
     "Year"
   )
 )
+name_match_df$oldNames <- toupper(name_match_df$oldNames)
 
 # loading all files
 files <- list.files("data/")
@@ -261,6 +271,7 @@ for(file in files){
   year = strsplit(file, ".csv")[[1]]
   data <- read.csv(paste0("data/", file)) %>%
     mutate(Year = year)
+  names(data) <- toupper(names(data))
   message(glue::glue("\n Processing file for: {year}"))
   data <- rename_cols(
     dataset = data, 
