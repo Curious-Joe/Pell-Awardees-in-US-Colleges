@@ -119,12 +119,14 @@ app.layout = html.Div([
         html.Div(
             id = "maps",
             children=[
-                dcc.Dropdown(id='dropdown',
+                dcc.Dropdown(id='dropdown-state',
                              options= [{'label': i, 'value': i} for i in STATES],
-                             multi=False,
+                             value = ['IL'],
+                             multi=True,
                              placeholder='Select State...',
+                             style = {'width':'95%'}
                              ),
-                dcc.Graph(id='top10_rank', style={'display': 'inline-block', 'width': '100%', 'height': '200%'}, figure={})
+                dcc.Graph(id='top10_rank', style={'display': 'inline-block', 'width': '90%', 'height': '100vh'}, figure={})
             ], className='six columns'
         )
     ], className="column")
@@ -140,14 +142,15 @@ app.layout = html.Div([
      Output(component_id='map_dollar', component_property='figure'),
      Output(component_id='top10_rank', component_property='figure')
      ],
-    [Input(component_id='year-range-slider', component_property='value')]
+    [Input(component_id='year-range-slider', component_property='value'),
+     Input(component_id='dropdown-state', component_property='value')]
 )
-def update_graph(year_slctd):
+def update_graph(year_slctd, state_slctd):
     # print(year_slctd)
     # print(type(year_slctd))
 
     input_print = "The year range chosen is: {}".format(year_slctd)
-    year_slctd = np.array(range(year_slctd[0], year_slctd[1]))
+    year_slctd = np.array(range(year_slctd[0], year_slctd[1]+1))
     # print(type(year_slctd))
 
     # year-wise total recipients
@@ -162,6 +165,7 @@ def update_graph(year_slctd):
 
     # year-wise top 10 institutions
     ins_year_wise_total_recip = pell_df[pell_df['Year'].isin(year_slctd)]
+    ins_year_wise_total_recip = ins_year_wise_total_recip[ins_year_wise_total_recip['Institution State'].isin(state_slctd)]
     top_10 = ins_year_wise_total_recip.groupby(["Year"]).apply(lambda x: x.sort_values(["Total Recipients"], ascending=False)).reset_index(
         drop=True)
     top_10 = top_10.groupby('Year').head(10)
@@ -213,7 +217,7 @@ def update_graph(year_slctd):
     )
 
     # Rank plot of top 10 colleges
-    lineRank = px.line(top_10, x = 'Year', y='rank', color='Institution Name')
+    lineRank = px.line(top_10, x = 'Year', y='rank', line_group= 'Institution Name', color='Institution Name')
     scatterRank = px.scatter(top_10, x='Year', y='rank', color='Institution Name', text='rank')
     scatterRank.update_traces(
         marker = dict(size = 20, symbol = 'square'),
@@ -221,8 +225,9 @@ def update_graph(year_slctd):
     )
 
     rankPlot = go.Figure(data=lineRank.data + scatterRank.data)
-    rankPlot.update_xaxes(autorange='reversed', type='category')
+    rankPlot.update_xaxes(dtick = 1)
     rankPlot.update_yaxes(visible=False, showticklabels=False, autorange='reversed')
+    rankPlot.update_layout(showlegend=False)
 
     return recip_fig, award_fig, rankPlot
 
