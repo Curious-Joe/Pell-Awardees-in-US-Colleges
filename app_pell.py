@@ -4,6 +4,7 @@ import re
 
 import dash
 import dash_core_components as dcc
+import dash_bootstrap_components as dbc
 import dash_html_components as html
 import pandas as pd
 import numpy as np
@@ -70,84 +71,119 @@ app.layout = html.Div([
     ),
 
     html.Div(
-        id="slider-container",
+        id='controls',
         children=[
-            html.P(
-                id="slct_year",
-                children="Drag the slider to change the year:",
-            ),
-            dcc.RangeSlider(
-                id='year-range-slider',
-                min=min(YEARS),
-                max=max(YEARS),
-                step=1,
-                value=[min(YEARS), min(YEARS) + 3],
-                marks =
-                # slider_labels
-                {1999: '1999',
-                 2000: '2000',
-                 2001: '2001',
-                 2002: '2002',
-                 2003: '2003',
-                 2004: '2004',
-                 2005: '2005',
-                 2006: '2006',
-                 2007: '2007',
-                 2008: '2008',
-                 2009: '2009',
-                 2010: '2010',
-                 2011: '2011',
-                 2012: '2012',
-                 2013: '2013',
-                 2014: '2014',
-                 2015: '2015',
-                 2016: '2016',
-                 2017: '2017'}
-            )
-        ],
-    ),
-
-    html.Div([
-    html.Div(
-            # id = "maps",
-            children=[
-            dcc.Graph(id='map_recipient', style={'display': 'inline-block', 'width':'100%', 'height': '100%'}, figure={}),
-            dcc.Graph(id='map_dollar', style={'display': 'inline-block','width':'100%', 'height': '100%'}, figure={})
-            ], className='six columns'
-        ),
-
-        html.Div(
-            id = "maps",
-            children=[
-                dcc.Dropdown(id='dropdown-state',
+            html.Div(
+                id="slider-container",
+                children=[
+                    html.P(
+                        id="slct_year",
+                        children="Drag the slider to change the year:",
+                    ),
+                    dcc.RangeSlider(
+                        id='year-range-slider',
+                        min=min(YEARS),
+                        max=max(YEARS),
+                        step=1,
+                        value=[min(YEARS), min(YEARS) + 3],
+                        marks =
+                        # slider_labels
+                        {1999: '1999',
+                         2000: '2000',
+                         2001: '2001',
+                         2002: '2002',
+                         2003: '2003',
+                         2004: '2004',
+                         2005: '2005',
+                         2006: '2006',
+                         2007: '2007',
+                         2008: '2008',
+                         2009: '2009',
+                         2020: '2020',
+                         2011: '2011',
+                         2012: '2012',
+                         2013: '2013',
+                         2014: '2014',
+                         2015: '2015',
+                         2016: '2016',
+                         2017: '2017'}
+                    ),
+                ], className='six columns'),
+                html.Div(
+                    id='dropdn_state',
+                    children=[
+                        html.P(
+                        id="slct_state",
+                        children="Select the state(s) to look at the top 20 colleges:",
+                        ),
+                        html.Div(),
+                        html.Div(),
+                        dcc.Dropdown(
+                            id='dropdown-state',
                              options= [{'label': i, 'value': i} for i in STATES],
                              value = ['IL'],
                              multi=True,
                              placeholder='Select State...',
                              style = {'width':'95%'}
-                             ),
-                dcc.Graph(id='top10_rank', style={'display': 'inline-block', 'width': '90%', 'height': '100vh'}, figure={})
-            ], className='six columns'
-        )
-    ], className="column")
+                        ),
+                    ], className='six columns'
+                )
+        ], className='row'
+    ),
+    html.Br(), html.Br(),
+    html.Div(
+        id = 'visuals',
+        children=[
+            html.Div(
+                    id="slider_maps",
+                    children=[
+                    html.Div(
+                        id='maps',
+                        children=[
+                            html.H3(id='map_title', children=[], style={"textAlign":"center"}),
+                            dcc.Graph(
+                                id='map_recipient',
+                                figure={}
+                            ),
+                            dcc.Graph(
+                                id='map_dollar',
+                                figure={})
+                        ]
+                    ),
+                    ], className='six columns', style={'background':'black'}
+                ),
 
+                html.Div(
+                    id='rank_plot',
+                    children=[
+                        html.H3(id='rank_title', children=[], style={"textAlign":"center"}),
+                        dcc.Graph(
+                            id='top20_rank',
+                            style={'width': '90%', 'height': '97vh'},
+                            figure={}
+                        )
+                    ], className='six columns', style={'background':'black'}
+                )
+        ], className='row',
+    )
 ])
 
 
 # ------------------------------------------------------------------------------
 # Connect the Plotly graphs with Dash Components
 @app.callback(
-    [
+    [Output(component_id='rank_title', component_property='children'),
+    Output(component_id='map_title', component_property='children'),
      Output(component_id='map_recipient', component_property='figure'),
      Output(component_id='map_dollar', component_property='figure'),
-     Output(component_id='top10_rank', component_property='figure')
+     Output(component_id='top20_rank', component_property='figure')
      ],
     [Input(component_id='year-range-slider', component_property='value'),
      Input(component_id='dropdown-state', component_property='value')]
 )
 def update_graph(year_slctd, state_slctd):
-    # print(year_slctd)
-    # print(type(year_slctd))
+    rank_title = f"Top 20 Universities with the Most Pell Grantees in {state_slctd}"
+    map_title = f"Pell Distribution Across the US from {year_slctd[0]} to {year_slctd[0]}"
 
     input_print = "The year range chosen is: {}".format(year_slctd)
     year_slctd = np.array(range(year_slctd[0], year_slctd[1]+1))
@@ -163,15 +199,15 @@ def update_graph(year_slctd, state_slctd):
     state_year_wise_total_award_copy = state_year_wise_total_award.copy()
     state_year_wise_total_award_copy = state_year_wise_total_award_copy[state_year_wise_total_award_copy["Year"].isin(year_slctd)]
 
-    # year-wise top 10 institutions
+    # year-wise top 20 institutions
     ins_year_wise_total_recip = pell_df[pell_df['Year'].isin(year_slctd)]
     ins_year_wise_total_recip = ins_year_wise_total_recip[ins_year_wise_total_recip['Institution State'].isin(state_slctd)]
-    top_10 = ins_year_wise_total_recip.groupby(["Year"]).apply(lambda x: x.sort_values(["Total Recipients"], ascending=False)).reset_index(
+    top_20 = ins_year_wise_total_recip.groupby(["Year"]).apply(lambda x: x.sort_values(["Total Recipients"], ascending=False)).reset_index(
         drop=True)
-    top_10 = top_10.groupby('Year').head(10)
-    top_10 = top_10.sort_values(by=["Year", "Total Recipients"], ascending=False)
-    top_10['rank'] = tuple(zip(top_10['Total Recipients'], top_10['Institution Name']))
-    top_10['rank'] = top_10.groupby('Year', sort=False)['rank'].apply(lambda x: pd.Series(pd.factorize(x)[0])).values + 1
+    top_20 = top_20.groupby('Year').head(20)
+    top_20 = top_20.sort_values(by=["Year", "Total Recipients"], ascending=False)
+    top_20['rank'] = tuple(zip(top_20['Total Recipients'], top_20['Institution Name']))
+    top_20['rank'] = top_20.groupby('Year', sort=False)['rank'].apply(lambda x: pd.Series(pd.factorize(x)[0])).values + 1
 
     # Plot - Total recipients
     recip_fig = px.choropleth(
@@ -187,11 +223,14 @@ def update_graph(year_slctd, state_slctd):
     )
 
     recip_fig.update_layout(
-        title_text="Total Number of Pell Awardees Across the US",
+        title_text="Number of Pell Awardees",
         title_xanchor="center",
-        title_font=dict(size=24),
+        # title_font=dict(size=24),
         title_x=0.5,
         geo=dict(scope='usa'),
+        # coloraxis_colorbar_y=-0.1
+        coloraxis_colorbar=dict(yanchor="top", y=1, x=0,
+                                ticks="outside")
     )
 
     # Plot - Total award $$
@@ -209,16 +248,18 @@ def update_graph(year_slctd, state_slctd):
     )
 
     award_fig.update_layout(
-        title_text="Total Pell Award $$ Across the US",
+        title_text="Dollar Disbursed as Pell Award",
         title_xanchor="center",
-        title_font=dict(size=24),
+        # title_font=dict(size=12),
         title_x=0.5,
         geo=dict(scope='usa'),
+        coloraxis_colorbar=dict(yanchor="top", y=1, x=0,
+                                ticks="outside")
     )
 
-    # Rank plot of top 10 colleges
-    lineRank = px.line(top_10, x = 'Year', y='rank', line_group= 'Institution Name', color='Institution Name')
-    scatterRank = px.scatter(top_10, x='Year', y='rank', color='Institution Name', text='rank')
+    # Rank plot of top 20 colleges
+    lineRank = px.line(top_20, x = 'Year', y='rank', line_group= 'Institution Name', color='Institution Name')
+    scatterRank = px.scatter(top_20, x='Year', y='rank', color='Institution Name', text='rank')
     scatterRank.update_traces(
         marker = dict(size = 20, symbol = 'square'),
         textposition = 'middle center'
@@ -227,9 +268,18 @@ def update_graph(year_slctd, state_slctd):
     rankPlot = go.Figure(data=lineRank.data + scatterRank.data)
     rankPlot.update_xaxes(dtick = 1)
     rankPlot.update_yaxes(visible=False, showticklabels=False, autorange='reversed')
-    rankPlot.update_layout(showlegend=False)
+    rankPlot.update_layout(
+        showlegend=False,
+        template = 'plotly_dark',
+        # title={
+        #     'text': f"Top 20 Universities with the Most Pell Grantees in {state_slctd}",
+        #     'y': 0.95,
+        #     'x': 0.5,
+        #     'xanchor': 'center',
+        #     'yanchor': 'top'}
+    )
 
-    return recip_fig, award_fig, rankPlot
+    return rank_title, map_title, recip_fig, award_fig, rankPlot
 
 
 # ------------------------------------------------------------------------------
