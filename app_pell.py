@@ -99,7 +99,7 @@ app.layout = html.Div([
                          2007: '2007',
                          2008: '2008',
                          2009: '2009',
-                         2020: '2020',
+                         2010: '2010',
                          2011: '2011',
                          2012: '2012',
                          2013: '2013',
@@ -124,7 +124,7 @@ app.layout = html.Div([
                              value = ['IL'],
                              multi=True,
                              placeholder='Select State...',
-                             style = {'width':'95%'}
+                             style = {'width':'100%'}
                         ),
                     ], className='six columns'
                 )
@@ -159,10 +159,10 @@ app.layout = html.Div([
                         html.H3(id='rank_title', children=[], style={"textAlign":"center"}),
                         dcc.Graph(
                             id='top20_rank',
-                            style={'width': '90%', 'height': '97vh'},
+                            style={'width': '100%', 'height': '100vh'},
                             figure={}
                         )
-                    ], className='six columns', style={'background':'black'}
+                    ], className='six columns', style={'background':'black', 'height':'100vh'}
                 )
         ], className='row',
     )
@@ -183,7 +183,7 @@ app.layout = html.Div([
 )
 def update_graph(year_slctd, state_slctd):
     rank_title = f"Top 20 Universities with the Most Pell Grantees in {state_slctd}"
-    map_title = f"Pell Distribution Across the US from {year_slctd[0]} to {year_slctd[0]}"
+    map_title = f"Pell Distribution Across the US from {year_slctd[0]} to {year_slctd[1]}"
 
     input_print = "The year range chosen is: {}".format(year_slctd)
     year_slctd = np.array(range(year_slctd[0], year_slctd[1]+1))
@@ -229,7 +229,7 @@ def update_graph(year_slctd, state_slctd):
         title_x=0.5,
         geo=dict(scope='usa'),
         # coloraxis_colorbar_y=-0.1
-        coloraxis_colorbar=dict(yanchor="top", y=1, x=0,
+        coloraxis_colorbar=dict(yanchor="top", y=1, x=-0.1,
                                 ticks="outside")
     )
 
@@ -253,13 +253,13 @@ def update_graph(year_slctd, state_slctd):
         # title_font=dict(size=12),
         title_x=0.5,
         geo=dict(scope='usa'),
-        coloraxis_colorbar=dict(yanchor="top", y=1, x=0,
+        coloraxis_colorbar=dict(yanchor="top", y=1, x=-0.1,
                                 ticks="outside")
     )
 
     # Rank plot of top 20 colleges
     lineRank = px.line(top_20, x = 'Year', y='rank', line_group= 'Institution Name', color='Institution Name')
-    scatterRank = px.scatter(top_20, x='Year', y='rank', color='Institution Name', text='rank')
+    scatterRank = px.scatter(top_20, x='Year', y='rank', text='rank', color_discrete_sequence=['slategrey'])
     scatterRank.update_traces(
         marker = dict(size = 20, symbol = 'square'),
         textposition = 'middle center'

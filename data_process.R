@@ -166,18 +166,51 @@ summary(reportSourcesSummary)
 unique(reportSourcesSummary$year) %>% length()
 table(reportSourcesSummary$value) %>% sort(decreasing = T)
 
-# Convert values to upper case
-reportSourcesSummary$valueCln <- toupper(reportSourcesSummary$value)
-table(reportSourcesSummary$value) %>% sort(decreasing = T)
-
-# Unify similar name
-
 # Report with exact same columns
 table(reportSourcesSummary)
   
 
 
 # 2.0 DATA PREPARATION ----
+# 2.1 Matching old names to standardised names ----
+newNames <- c(
+  "Name",
+  "City",
+  "State",
+  "Award",
+  "Recipient"
+)
+
+
+matchNewName <- function(oldNamesTbl, oldNameCol, NewNames){
+  copyTbl <- oldNamesTbl %>% head(0)
+  oldNames <- pull(oldNamesTbl, {{oldNameCol}})
+  
+  for(name in NewNames){
+    df <- oldNamesTbl %>% 
+      mutate(
+        newName = ifelse(
+          grepl(
+            pattern = name,
+            x = oldNames,
+            ignore.case = T
+          ), name, NA
+        )
+      ) %>% drop_na()
+    copyTbl <- copyTbl %>% rbind(df)
+  }
+  
+  unmatchedRows <- oldNamesTbl %>%
+    filter(!{{oldNameCol}} %in% unique(pull(copyTbl, {{oldNameCol}}))) %>%
+    mutate(newName = {{oldNameCol}})
+  
+  copyTbl <- copyTbl %>%
+    rbind(unmatchedRows)
+  
+  return(unique(copyTbl))
+}
+reportSourcesSummaryCln <- matchNewName(reportSourcesSummary, value, newNames)
+
 # 2.1 Function for Data Processing ----
 rename_cols <- function(dataset, nameMatchDf, matchOldCol, matchNewCol){
   
@@ -265,20 +298,33 @@ name_match_df$oldNames <- toupper(name_match_df$oldNames)
 
 # loading all files
 files <- list.files("data/")
+# files <- files[1]
 data_combo <- NULL
 for(file in files){
   
-  year = strsplit(file, ".csv")[[1]]
-  data <- read.csv(paste0("data/", file)) %>%
-    mutate(Year = year)
-  names(data) <- toupper(names(data))
-  message(glue::glue("\n Processing file for: {year}"))
-  data <- rename_cols(
-    dataset = data, 
-    nameMatchDf = name_match_df,
-    matchOldCol = oldNames, 
-    matchNewCol = newNames)
+  file_year = strsplit(file, ".csv")[[1]]
+  data <- read_csv(paste0("data/", file))
+  newNames <- reportSourcesSummaryCln %>%
+    filter(year == file_year) %>%
+    pull(newName) %>%
+    sort()
+  oldNames <- names(data) %>% sort()
+  data <- data %>% relocate(oldNames)
+  print(newNames)
+  print(names(data))
   
+  names(data) <- newNames
+  data <- data %>%
+    select(standardNames) %>%
+    mutate(Year = file_year) 
+  message(glue::glue("\n Processing file for: {year}"))
+  # data <- rename_cols(
+  #   dataset = data, 
+  #   nameMatchDf = name_match_df,
+  #   matchOldCol = oldNames, 
+  #   matchNewCol = newNames)
+  # 
+  print(head(data))
   data_combo <<- data_combo %>%
     rbind(data)
 }
@@ -290,3 +336,5 @@ data_combo <- data_combo %>%
 
 write.csv(data_combo, "data/pell_grant_data.csv", row.names = F)
 
+
+# 2.2 Column standardizing attempt - 02 ----
