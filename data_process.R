@@ -13,9 +13,6 @@
 
 # 0.0 PROJECT SET UP ----
 
-# 0.1 Directory ----
-setwd("C:/Users/ahfah/Desktop/Data Science Projects/Dash App/pell_students_dash_app")
-
 # 0.1 Loading Libraries ----
 library(readxl)
 library(rvest)
@@ -23,6 +20,7 @@ library(tidyverse)
 library(httr)
 library(janitor)
 library(patchwork)
+library(glue)
 
 
 # 1.0 DATA SOURCING ----
@@ -112,6 +110,8 @@ similarColCount <- function(df, targetCol, keyword){
   cols <- unique(
     grep(keyword, pull(df, {{targetCol}}), ignore.case = T, value = T)
   )
+  # cols2 <- unique(filter(df, {{targetCol}} == keyword) %>% pull({{targetCol}}))
+  
   filter(df, {{targetCol}} %in% c(cols)) %>%
     count({{targetCol}}, sort = T) 
   
@@ -173,168 +173,94 @@ table(reportSourcesSummary)
 
 # 2.0 DATA PREPARATION ----
 # 2.1 Matching old names to standardised names ----
-newNames <- c(
-  "Name",
-  "City",
-  "State",
-  "Award",
-  "Recipient"
+reportSourcesSummaryCln %>%
+  mutate(value = toupper(value)) %>%
+  select(value, newName) %>%
+  table()
+  
+standardNames <- c(
+  "NAME",
+  "STATE",
+  "AWARD",
+  "RECIPIENT"
 )
 
-
-matchNewName <- function(oldNamesTbl, oldNameCol, NewNames){
+matchNewName <- function(oldNamesTbl, oldNameCol, standardNames){
   copyTbl <- oldNamesTbl %>% head(0)
   oldNames <- pull(oldNamesTbl, {{oldNameCol}})
   
-  for(name in NewNames){
-    df <- oldNamesTbl %>% 
-      mutate(
-        newName = ifelse(
-          grepl(
-            pattern = name,
-            x = oldNames,
-            ignore.case = T
-          ), name, NA
-        )
-      ) %>% drop_na()
-    copyTbl <- copyTbl %>% rbind(df)
+  for(name in standardNames){
+    df <- oldNamesTbl %>%
+        mutate(
+          newName = ifelse(
+            grepl(pattern = name, x = oldNames, ignore.case = T),
+            name, NA
+          )
+        ) %>% drop_na()
+      copyTbl <- copyTbl %>% rbind(df)
+    
   }
-  
+
   unmatchedRows <- oldNamesTbl %>%
     filter(!{{oldNameCol}} %in% unique(pull(copyTbl, {{oldNameCol}}))) %>%
     mutate(newName = {{oldNameCol}})
-  
+
   copyTbl <- copyTbl %>%
     rbind(unmatchedRows)
   
   return(unique(copyTbl))
 }
-reportSourcesSummaryCln <- matchNewName(reportSourcesSummary, value, newNames)
+reportSourcesSummaryCln <- matchNewName(reportSourcesSummary, value, standardNames)
+
+table(reportSourcesSummaryCln$newName)
+# Institution and Receips are two unstandardised values yet in the dataset
+reportSourcesSummaryCln <- reportSourcesSummaryCln %>%
+  mutate(newName = ifelse(
+    value == "Institution", "NAME", ifelse(
+      value == "Recips", "RECIPIENT", newName
+    )
+  ))
+  
+table(reportSourcesSummaryCln$newName)
+
+# dropping unnecessary columns
+reportSourcesSummaryCln <- reportSourcesSummaryCln %>%
+  filter(newName %in% standardNames)
 
 # 2.1 Function for Data Processing ----
-rename_cols <- function(dataset, nameMatchDf, matchOldCol, matchNewCol){
-  
-  # setting up variables
-  oldNames <- names(dataset)
-  newNames <- unique(nameMatchDf %>% pull({{matchNewCol}}))
-  newNamesCopy <- newNames
-  name_match <- tibble(old = as.character(), new = as.character()) # blank tibble to store old and new name match pairs
-  
-  # iterating over the dataset to find old and new name match
-  for(matchOldName in pull(nameMatchDf, {{matchOldCol}})){
-    pattern <- strsplit(matchOldName, split = " ")[[1]] %>%
-      rlist::list.last()
-    oldName <- grep(pattern, oldNames, ignore.case = T, value = T)
-    
-    if(rlang::is_empty(oldName)){
-      message(paste0(matchOldName, " doesn't exist!"))
-    } else {
-      if(length(oldName) > 1){
-        message(glue::glue("{pattern} matches multiple cols!"))
-      }else {
-        newName <- filter(nameMatchDf, {{matchOldCol}} == oldName) %>%
-          pull({{matchNewCol}})
-        # newName <- grep(oldName, 
-        #                 pull(nameMatchDf, {{matchNewCol}}), 
-        #                 ignore.case = T, 
-        #                 value = T) %>% 
-        #   unique()
-        print(glue::glue("new name: {newName}"))
-      }
-      
-      # checking if new column is already detected and skipped if already populated
-      if(sum(oldNames %in% matchOldName) == 1) {
-        name_match <- name_match %>%
-          bind_rows(c(old = matchOldName, new = newName)) %>%
-          unique() %>%
-          drop_na() # drops name matches where no matched old column exists
-        print(glue::glue("new names: {name_match$new}"))
-        print(glue::glue("old names: {name_match$old}"))
-        newNames <- newNames[!newNames %in% newName]
-      }
-    }
-  }
-  # print(glue::glue("new names: {name_match$new}"))
-  # print(glue::glue("old names: {name_match$old}"))
-  # keeping only the columns that match with new names
-  dataset <- select({dataset}, all_of(name_match$old))
-  # print(glue::glue("old names: {names(dataset)}"))
-  # renaming old column names
-  colnames(dataset) <- name_match$new
-  
-  # adding null for the absent columns
-  absentCols <- setdiff(newNamesCopy, names(dataset))
-  for(col in absentCols){
-    print(paste0("Absent col: ", col))
-    dataset <- dataset %>%
-      mutate(!!col := NA)
-  }
-  
-  return(dataset)
-}
-
-# setting up a table with old names and new names matches
-name_match_df <- tibble(
-  oldNames = c(
-    "Name", "Institution", "Institution_Name",
-    "Institution City", "City", "Institution_City",
-    "Institution State", "State", "Institution_State",
-    "Total Awards", "Awards", "Total_Awards", 
-    "Total Recipients", "Recipients", "Total_Recipients",
-    "Year"
-    
-  ),
-  
-  newNames = c(
-    "Institution Name", "Institution Name", "Institution Name",
-    "Institution City", "Institution City", "Institution City",
-    "Institution State", "Institution State", "Institution State",
-    "Total Awards", "Total Awards", "Total Awards",
-    "Total Recipients", "Total Recipients", "Total Recipients",
-    "Year"
-  )
-)
-name_match_df$oldNames <- toupper(name_match_df$oldNames)
-
+# 2.1.1 Attempt 02 ----
 # loading all files
 files <- list.files("data/")
-# files <- files[1]
 data_combo <- NULL
+standdardNames <- newNames
 for(file in files){
   
   file_year = strsplit(file, ".csv")[[1]]
   data <- read_csv(paste0("data/", file))
-  newNames <- reportSourcesSummaryCln %>%
-    filter(year == file_year) %>%
-    pull(newName) %>%
-    sort()
-  oldNames <- names(data) %>% sort()
-  data <- data %>% relocate(oldNames)
-  print(newNames)
-  print(names(data))
+  nameMatch <- reportSourcesSummaryCln %>%
+    filter(year == file_year) 
   
-  names(data) <- newNames
+  print(glue("Year in process: {file_year}"))
+  data <- data %>% select(nameMatch$value)
+  names(data) <- nameMatch$newName
   data <- data %>%
-    select(standardNames) %>%
-    mutate(Year = file_year) 
-  message(glue::glue("\n Processing file for: {year}"))
-  # data <- rename_cols(
-  #   dataset = data, 
-  #   nameMatchDf = name_match_df,
-  #   matchOldCol = oldNames, 
-  #   matchNewCol = newNames)
-  # 
-  print(head(data))
-  data_combo <<- data_combo %>%
+    mutate(YEAR = file_year) 
+  
+  data_combo <- data_combo %>%
     rbind(data)
 }
 
 # creating column for year start and session
 data_combo <- data_combo %>%
-  rename(Session = Year) %>%
-  separate(Session, sep = "-", into = c("Year", NA), remove = F) 
+  rename(SESSION = YEAR) %>%
+  separate(SESSION, sep = "-", into = c("YEAR", NA), remove = F) 
 
-write.csv(data_combo, "data/pell_grant_data.csv", row.names = F)
+# formatting data
+data_combo <- data_combo %>%
+  mutate(
+    NAME = tools::toTitleCase(tolower(NAME)),
+    STATE = toupper(STATE)
+  )
+write_csv(data_combo, "data/pell_grant_data.csv")
 
 
-# 2.2 Column standardizing attempt - 02 ----

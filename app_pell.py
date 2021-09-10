@@ -4,19 +4,16 @@ import re
 
 import dash
 import dash_core_components as dcc
-import dash_bootstrap_components as dbc
 import dash_html_components as html
 import pandas as pd
 import numpy as np
 from dash.dependencies import Input, Output, State
-import cufflinks as cf
 import plotly.express as px
 import plotly.graph_objects as go
 
 # Initialize app
 
 app = dash.Dash(__name__)
-# app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "Where are all the Pell Grantees?"
 server = app.server
 
@@ -29,24 +26,24 @@ APP_PATH = str(pathlib.Path(__file__).parent.resolve())
 # ------------------------------------------------------------------
 pell_df = pd.read_csv("data/pell_grant_data.csv")
 # year-wise total recipients
-state_year_wise_total_recip = pell_df.groupby(['Institution State', 'Year'])[['Total Recipients']].sum()
+state_year_wise_total_recip = pell_df.groupby(['STATE', 'YEAR'])[['RECIPIENT']].sum()
 state_year_wise_total_recip.reset_index(inplace = True)
 
 # year-wise total award $$
-state_year_wise_total_award = pell_df.groupby(['Institution State', 'Year'])[['Total Awards']].sum()
+state_year_wise_total_award = pell_df.groupby(['STATE', 'YEAR'])[['AWARD']].sum()
 state_year_wise_total_award.reset_index(inplace = True)
 
 # year and institution wise total recipients
-ins_year_wise_total_recip = pell_df.groupby(['Institution Name', 'Year'])[['Total Recipients']].sum()
+ins_year_wise_total_recip = pell_df.groupby(['NAME', 'YEAR'])[['RECIPIENT']].sum()
 ins_year_wise_total_recip.reset_index(inplace = True)
 
-YEARS = pell_df['Year'].unique()
+YEARS = pell_df['YEAR'].unique()
 slider_labels = {}
 for i in YEARS:
     str_year = str(i)
     slider_labels[i] = str_year
 
-STATES = pell_df['Institution State'].unique()
+STATES = pell_df['STATE'].unique()
 STATES = [x for x in STATES if x == x]
 
 # ------------------------------------------------------------------
@@ -58,16 +55,21 @@ app.layout = html.Div([
     html.Div(
         id="header",
         children=[
-            html.A(
-                html.Img(id="logo", src=app.get_asset_url("dash-logo.png")),
-                href="https://plotly.com/dash/",
-            ),
+            # html.A(
+            #     html.Img(id="logo", src=app.get_asset_url("dash-logo.png")),
+            #     href="https://plotly.com/dash/",
+            # ),
             html.H4(children="Pell Awardees Across the US"),
             html.H4(
                 id="description",
-                children="Check where all the Pell awardee students are studying."
+                children="Lately, Pell Grant students, "
+                         "the largest federal grant program for college students got a renewed attention because of its inclusion "
+                         "in the US News & World Report university ranking calculation. "
+                         "While it makes sense to incentivise institutions for having larger share of lower income students, "
+                         "it can be an undue punishment for institutions that are in the states with lower population. "
+                         "This dashboard provides a comparative view of the states, and rank universities in terms of their enrolled Pell grantees."
             ),
-        ],
+        ], style={'width':'95%', 'margin':25, 'textAlign': 'center'}
     ),
 
     html.Div(
@@ -150,7 +152,7 @@ app.layout = html.Div([
                                 figure={})
                         ]
                     ),
-                    ], className='six columns', style={'background':'black'}
+                    ], className='six columns', style={'background':'#252e3f'}
                 ),
 
                 html.Div(
@@ -162,10 +164,17 @@ app.layout = html.Div([
                             style={'width': '100%', 'height': '100vh'},
                             figure={}
                         )
-                    ], className='six columns', style={'background':'black', 'height':'100vh'}
+                    ], className='six columns', style={'background':'#252e3f', 'height':'100vh'}
                 )
         ], className='row',
-    )
+    ),
+
+    # html.Div(
+    #     id = 'credits',
+    #     children=[
+    #
+    #     ]
+    # )
 ])
 
 
@@ -191,64 +200,68 @@ def update_graph(year_slctd, state_slctd):
 
     # year-wise total recipients
     state_year_wise_total_recip_copy = state_year_wise_total_recip.copy()
-    state_year_wise_total_recip_copy = state_year_wise_total_recip_copy[state_year_wise_total_recip_copy["Year"].isin(year_slctd)]
-    state_year_wise_total_recip_copy = state_year_wise_total_recip_copy.groupby(['Institution State'])[['Total Recipients']].sum()
+    state_year_wise_total_recip_copy = state_year_wise_total_recip_copy[state_year_wise_total_recip_copy['YEAR'].isin(year_slctd)]
+    state_year_wise_total_recip_copy = state_year_wise_total_recip_copy.groupby(['STATE'])[['RECIPIENT']].sum()
     state_year_wise_total_recip_copy.reset_index(inplace=True)
 
     # year-wise total award $$
     state_year_wise_total_award_copy = state_year_wise_total_award.copy()
-    state_year_wise_total_award_copy = state_year_wise_total_award_copy[state_year_wise_total_award_copy["Year"].isin(year_slctd)]
+    state_year_wise_total_award_copy = state_year_wise_total_award_copy[state_year_wise_total_award_copy['YEAR'].isin(year_slctd)]
 
     # year-wise top 20 institutions
-    ins_year_wise_total_recip = pell_df[pell_df['Year'].isin(year_slctd)]
-    ins_year_wise_total_recip = ins_year_wise_total_recip[ins_year_wise_total_recip['Institution State'].isin(state_slctd)]
-    top_20 = ins_year_wise_total_recip.groupby(["Year"]).apply(lambda x: x.sort_values(["Total Recipients"], ascending=False)).reset_index(
+    ins_year_wise_total_recip = pell_df[pell_df['YEAR'].isin(year_slctd)]
+    ins_year_wise_total_recip = ins_year_wise_total_recip[ins_year_wise_total_recip['STATE'].isin(state_slctd)]
+    top_20 = ins_year_wise_total_recip.groupby(['YEAR']).apply(lambda x: x.sort_values(['RECIPIENT'], ascending=False)).reset_index(
         drop=True)
-    top_20 = top_20.groupby('Year').head(20)
-    top_20 = top_20.sort_values(by=["Year", "Total Recipients"], ascending=False)
-    top_20['rank'] = tuple(zip(top_20['Total Recipients'], top_20['Institution Name']))
-    top_20['rank'] = top_20.groupby('Year', sort=False)['rank'].apply(lambda x: pd.Series(pd.factorize(x)[0])).values + 1
+    top_20 = top_20.groupby('YEAR').head(20)
+    top_20 = top_20.sort_values(by=['YEAR', 'RECIPIENT'], ascending=False)
+    top_20['rank'] = tuple(zip(top_20['RECIPIENT'], top_20['NAME']))
+    top_20['rank'] = top_20.groupby('YEAR', sort=False)['rank'].apply(lambda x: pd.Series(pd.factorize(x)[0])).values + 1
 
     # Plot - Total recipients
     recip_fig = px.choropleth(
         data_frame=state_year_wise_total_recip_copy,
         locationmode='USA-states',
-        locations='Institution State',
+        locations='STATE',
         scope="usa",
-        color='Total Recipients',
-        hover_data=['Institution State', 'Total Recipients'],
+        color='RECIPIENT',
+        hover_data=['STATE', 'RECIPIENT'],
         color_continuous_scale= 'cividis',# px.colors.sequential.YlOrRd,
-        labels={'Total Recipients': '# Awarded'},
+        labels={'RECIPIENT': 'Number'},
         template='plotly_dark'
     )
 
     recip_fig.update_layout(
-        title_text="Number of Pell Awardees",
+        font_family="Trivia Serif",
+        title_text="Total Number of Awardees",
         title_xanchor="center",
-        # title_font=dict(size=24),
         title_x=0.5,
         geo=dict(scope='usa'),
-        # coloraxis_colorbar_y=-0.1
         coloraxis_colorbar=dict(yanchor="top", y=1, x=-0.1,
                                 ticks="outside")
+    )
+
+    recip_fig.update_traces(
+        hovertemplate = None
     )
 
     # Plot - Total award $$
     award_fig = px.choropleth(
         data_frame=state_year_wise_total_award_copy,
         locationmode='USA-states',
-        locations='Institution State',
+        locations='STATE',
         scope="usa",
-        color='Total Awards',
-        hover_data=['Institution State', 'Year', 'Total Awards'],
+        color='AWARD',
+        hover_data=['STATE', 'AWARD'],
         # color_continuous_scale=px.colors.sequential.YlOrRd,
         color_continuous_scale = 'greens',
-        labels={'Total Awards': '$$ Awarded'},
+        labels={'AWARD': 'Dollar'},
         template='plotly_dark'
     )
 
     award_fig.update_layout(
-        title_text="Dollar Disbursed as Pell Award",
+        font_family="Trivia Serif",
+        title_text="Total Dollar Amount Awarded",
         title_xanchor="center",
         # title_font=dict(size=12),
         title_x=0.5,
@@ -257,26 +270,49 @@ def update_graph(year_slctd, state_slctd):
                                 ticks="outside")
     )
 
+    award_fig.update_traces(
+        hovertemplate=None
+    )
+
     # Rank plot of top 20 colleges
-    lineRank = px.line(top_20, x = 'Year', y='rank', line_group= 'Institution Name', color='Institution Name')
-    scatterRank = px.scatter(top_20, x='Year', y='rank', text='rank', color_discrete_sequence=['slategrey'])
+    lineRank = px.line(top_20, x = 'YEAR', y='rank', color='NAME')
+    lineRank.update_traces(hoverinfo='skip')
+
+    scatterRank = px.scatter(
+        top_20,
+        x='YEAR',
+        y='rank',
+        text='rank',
+        color = 'NAME',
+        custom_data = ['NAME']
+    )
     scatterRank.update_traces(
         marker = dict(size = 20, symbol = 'square'),
-        textposition = 'middle center'
+        textposition = 'middle center',
+        hovertemplate="<b>%{customdata[0]} </b> <br>Rank: %{text} </br> Year: %{x}"
     )
 
     rankPlot = go.Figure(data=lineRank.data + scatterRank.data)
     rankPlot.update_xaxes(dtick = 1)
     rankPlot.update_yaxes(visible=False, showticklabels=False, autorange='reversed')
+    # rankPlot.layout.paper_bgcolor='#5c5c5c'
+    # rankPlot.layout.plot_bgcolor='#5c5c5c'
+
     rankPlot.update_layout(
+        font_family="Trivia Serif",
         showlegend=False,
         template = 'plotly_dark',
-        # title={
-        #     'text': f"Top 20 Universities with the Most Pell Grantees in {state_slctd}",
-        #     'y': 0.95,
-        #     'x': 0.5,
-        #     'xanchor': 'center',
-        #     'yanchor': 'top'}
+        margin={
+        'l': 20,
+        'r': 20,
+        'b': 5,
+        't': 5,
+        'pad': 4},
+        hoverlabel=dict(
+            bgcolor="white",
+            # font_size=16,
+            font_family="Trivia Serif"
+        )
     )
 
     return rank_title, map_title, recip_fig, award_fig, rankPlot
