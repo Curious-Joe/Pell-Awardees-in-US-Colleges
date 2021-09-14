@@ -1,6 +1,6 @@
 temp
 delete*
-.idea
-_pycache_
+.idea/
+__pycache__
 test*
 .Rproj.user

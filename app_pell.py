@@ -4,6 +4,7 @@ import re
 
 import dash
 import dash_core_components as dcc
+import dash_bootstrap_components as dbc
 import dash_html_components as html
 import pandas as pd
 import numpy as np
@@ -152,7 +153,7 @@ app.layout = html.Div([
                                 figure={})
                         ]
                     ),
-                    ], className='six columns', style={'background':'#252e3f'}
+                    ], className='six columns', style={'background':'#252e3f', 'height':'100%'}
                 ),
 
                 html.Div(
@@ -164,9 +165,9 @@ app.layout = html.Div([
                             style={'width': '100%', 'height': '100vh'},
                             figure={}
                         )
-                    ], className='six columns', style={'background':'#252e3f', 'height':'100vh'}
+                    ], className='six columns', style={'background':'#252e3f', 'height':'100%'}
                 )
-        ], className='row',
+        ], className='row', style={'height':'100vh'}
     ),
 
     # html.Div(
@@ -288,15 +289,12 @@ def update_graph(year_slctd, state_slctd):
     )
     scatterRank.update_traces(
         marker = dict(size = 20, symbol = 'square'),
-        textposition = 'middle center',
-        hovertemplate="<b>%{customdata[0]} </b> <br>Rank: %{text} </br> Year: %{x}"
+        textposition = 'middle center'
     )
 
     rankPlot = go.Figure(data=lineRank.data + scatterRank.data)
     rankPlot.update_xaxes(dtick = 1)
     rankPlot.update_yaxes(visible=False, showticklabels=False, autorange='reversed')
-    # rankPlot.layout.paper_bgcolor='#5c5c5c'
-    # rankPlot.layout.plot_bgcolor='#5c5c5c'
 
     rankPlot.update_layout(
         font_family="Trivia Serif",
@@ -314,10 +312,13 @@ def update_graph(year_slctd, state_slctd):
             font_family="Trivia Serif"
         )
     )
+    rankPlot.update_traces(
+        hovertemplate="<b>%{customdata[0]} </b> <br>Rank: %{text} </br> Year: %{x}"
+    )
 
     return rank_title, map_title, recip_fig, award_fig, rankPlot
 
 
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, port=2020)
