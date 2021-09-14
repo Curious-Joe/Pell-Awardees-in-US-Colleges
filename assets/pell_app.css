@@ -326,6 +326,16 @@ p {
     margin: 2rem 0 3rem 0;*/
 }
 
+#notes {
+    font-size: 1.50rem;
+    border-left: #2cfec1 solid 1rem;
+    padding-left: 1rem;
+    /*max-width: 100rem;*/
+    margin: 2rem 0 3rem 0;
+}
+
+
+
 #logo {
     height: 5rem;
     margin-bottom: 2rem;

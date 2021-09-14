@@ -167,15 +167,33 @@ app.layout = html.Div([
                         )
                     ], className='six columns', style={'background':'#252e3f', 'height':'100%'}
                 )
-        ], className='row', style={'height':'100vh'}
+        ], className='row',
     ),
 
-    # html.Div(
-    #     id = 'credits',
-    #     children=[
-    #
-    #     ]
-    # )
+    html.Div(
+        id='notes',
+        children=[
+            html.Div(
+                # id = 'notes',
+                children=[
+                    html.B("Notes:"),
+                    html.Br(),
+                    html.P("1. Only continental US is considered for better visual | DC included"),
+                    html.P(children=[
+                        "2. This visualization is largely inspired by the article from Caroline Hoxby and Sarah Turner on this topic. ",
+                        dcc.Link('Link to the Article', href='https://www.educationnext.org/right-way-capture-college-opportunity-popular-measures-can-paint-wrong-picture-low-income-student-enrollm')
+                    ])
+                ], className='ten columns'
+            ),
+            html.Div(
+                children=[
+                    html.Br(),
+                    html.P(children=[html.Strong("Prepared By:"), dcc.Link(" Arafath Hossain", href='https://www.linkedin.com/in/arafath-hossain/')]),
+                    html.P(children=[html.Strong("Data Source:"), dcc.Link(" US Dept. of Education", href='https://www2.ed.gov/finaid/prof/resources/data/pell-institution.html')])
+                ], className='two columns'
+            )
+        ], className='row'
+    )
 ])
 
 
