@@ -1,39 +1,36 @@
-# US opioid epidemic dataset and Dash app
+# Pell Award Dashboard using Dash
 
-Poison induced death data was downloaded from [CDC Wonder](dash_app_screencast.gif), using cause-of-death codes X40–X44 (unintentional), X60–X64 (suicide), X85 (homicide), or Y10–Y14 (undetermined intent).
+Pell is the largest financial aid program run by the federal government for the college students. This repository contains the files to pull all the pell award data from the US board of higher education and presents the award distribution across the United States using a Dash application. 
 
-[View the Dash app](https://dash-gallery.plotly.host/dash-opioid-epidemic/)
+ <p align="center">
+  <img src="dash_app_pell.gif" alt="animated" />
+</p>
 
-## Getting Started
+## Key File Descriptions
 
-### Running the app locally
-We suggest you to create a separate virtual environment running Python 3 for this app, and install all of the required dependencies there. Run in Terminal/Command Prompt:
+### data_process.R
 
-```
-git clone https://github.com/plotly/dash-sample-apps
-cd dash-sample-apps/apps/dash-opioid-epidemic
-python3 -m virtualenv venv
-```
-In UNIX system: 
+This R script scrapes the [US Department of Education](https://www2.ed.gov/finaid/prof/resources/data/pell-institution.html) to extract all the files about the historical award distributions. Seemingly these files are prepared manually and for human consumption, thus the files are not standardized and contain differently formatted header on top of the report tables.
 
-```
-source venv/bin/activate
-```
-In Windows: 
+This script performs following steps to standardize, join and save the final combined verstion of the dataset to be consumed by the application:
 
-```
-venv\Scripts\activate
-```
+* Standardise the shapes of the reports, 
+* Standardize the text values eg. name of the institutions,
+* Standardise the column names,
+* Joins the standardized reports and save the final outcome as 'data/pell_grant_data.csv'.
 
-To install all of the required packages to this environment, simply run:
+### app.pell.py
 
-```
-pip install -r requirements.txt
-```
+The dash application file.
 
-and all of the required `pip` packages, will be installed, and the app will be able to run.
+### Data
+
+This directory contains the raw and processed data. While recreating this app, you can empty this folder and re-running data_process.R should re-populate this folder accordingly.
 
 
-![plotly-dash-screencast](assets/app_screencast.gif)
+***
 
-Dash app inspired by [this Tableau dashboard](https://www.cdc.gov/nchs/data-visualization/drug-poisoning-mortality/)
+## Document Detail
+
+**Prepared By:** Arafath Hossain
+**Created On:** September 14, 2021
