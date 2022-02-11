@@ -2,46 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ff936d35-6602-4e64-a94c-5b2a88774a00" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/pell_students_dash_app.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app_pell.py" beforeDir="false" afterPath="$PROJECT_DIR$/app_pell.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/opioid.css" beforeDir="false" afterPath="$PROJECT_DIR$/assets/pell_app.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/1999-00.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/1999-00.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2000-01.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2000-01.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2001-02.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2001-02.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2002-03.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2002-03.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2003-04.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2003-04.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2004-05.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2004-05.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2005-06.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2005-06.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2006-07.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2006-07.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2007-08.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2007-08.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2008-09.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2008-09.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2009-10.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2009-10.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2010-11.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2010-11.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2011-12.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2011-12.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2012-13.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2012-13.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2013-14.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2013-14.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2014-15.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2014-15.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2015-16.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2015-16.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2016-17.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2016-17.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/2017-18.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/2017-18.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/pell_grant_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/pell_grant_data.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_process.R" beforeDir="false" afterPath="$PROJECT_DIR$/data_process.R" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
-  </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Python Script" />
-      </list>
-    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -52,26 +21,58 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/app_pell.py" />
+    <property name="settings.editor.selected.configurable" value="PyConsoleConfigurable.Python Console" />
+  </component>
+  <component name="PyConsoleOptionsProvider">
+    <option name="myPythonConsoleState">
+      <console-settings module-name="Pell-Students-in-US-Colleges" is-module-sdk="true" working-directory="$PROJECT_DIR$">
+        <option name="myUseModuleSdk" value="true" />
+        <option name="myModuleName" value="Pell-Students-in-US-Colleges" />
+        <option name="myWorkingDirectory" value="$PROJECT_DIR$" />
+      </console-settings>
+    </option>
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\ahossa1\Pell-Students-in-US-Colleges" />
+      <recent name="C:\Users\ahfah\Desktop\Data Science Projects\Dash App\pell_students_dash_app" />
     </key>
   </component>
   <component name="RunManager" selected="Python.app_pell">
-    <configuration name="app_pell" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Pell-Students-in-US-Colleges" />
+    <configuration name="app" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pell_students_dash_app" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/temp" />
       <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/temp/app.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="app_pell" type="PythonConfigurationType" factoryName="Python">
+      <module name="Pell-Students-in-US-Colleges" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Python_Envs\dash_pell\Scripts\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/app_pell.py" />
@@ -83,8 +84,29 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="app_pell_v-bootstrap" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pell_students_dash_app" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/temp" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/temp/app_pell_v-bootstrap.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Pell-Students-in-US-Colleges" />
+      <module name="pell_students_dash_app" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -104,8 +126,8 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="test2" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="Pell-Students-in-US-Colleges" />
+    <configuration name="test_v-bootstrap - V02" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pell_students_dash_app" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -116,7 +138,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test2.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test_v-bootstrap - V02.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -125,11 +147,42 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="test_v-bootstrap" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pell_students_dash_app" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test_v-bootstrap.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.app_pell" />
+      <item itemvalue="Python.app" />
+      <item itemvalue="Python.app_pell_v-bootstrap" />
+      <item itemvalue="Python.test" />
+      <item itemvalue="Python.test_v-bootstrap" />
+      <item itemvalue="Python.test_v-bootstrap - V02" />
+    </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.app_pell" />
+        <item itemvalue="Python.test_v-bootstrap - V02" />
+        <item itemvalue="Python.test_v-bootstrap" />
         <item itemvalue="Python.test" />
-        <item itemvalue="Python.test2" />
+        <item itemvalue="Python.app_pell_v-bootstrap" />
+        <item itemvalue="Python.app" />
       </list>
     </recent_temporary>
   </component>
@@ -154,5 +207,6 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
 </project>
